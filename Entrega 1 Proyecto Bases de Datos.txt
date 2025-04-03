@@ -9,22 +9,15 @@ Los datos originales se encuentran en el archivo companies.csv
 
 1. Descripción general de los datos
 
-
 Este conjunto de datos contiene información sobre las principales 10,000 empresas, incluyendo su nombre, descripción, calificación, aspectos más valorados y criticados, número de reseñas, salario promedio, cantidad de entrevistas realizadas, cantidad de empleos disponibles y beneficios.
-
-
 
 
 2. ¿Quién los recolecta?
 
-
 Fue recopilado por Vedant Khapekar. La fuente original de los datos proviene de Ambition Box, una plataforma de reclutamiento.
 
 
-
-
 3. ¿Cuál es el propósito de su recolección?
-
 
 El propósito de este conjunto de datos es proporcionar información detallada sobre las principales empresas, lo que permite realizar análisis de:
 * Opiniones de empleados sobre las empresas.
@@ -35,14 +28,12 @@ El propósito de este conjunto de datos es proporcionar información detallada s
 
 4. ¿Dónde se pueden obtener?
 
-
 En Kaggle
 
 
 
 
 5. ¿Con qué frecuencia se actualizan?
-
 
 Nunca, a pesar de que los datos cambien en Ambition Box, esta base de datos no se actualiza.
 
@@ -51,18 +42,10 @@ Nunca, a pesar de que los datos cambien en Ambition Box, esta base de datos no s
 
 6. ¿Cuántas tuplas y cuántos atributos tiene el set de datos?
 
-
 Consta de 10,000 tuplas y 10 atributos.
 
 
-
-
-
-
-
-
 7. ¿Qué significa cada atributo del set?
-
 
 * Company_name - Nombre de la empresa.
 * Description - Breve descripción de la empresa, incluyendo industria y número de
@@ -79,7 +62,6 @@ Empleados.
 
 8. ¿Qué atributos son numéricos?
 
-
 * Ratings (float) → Calificación promedio de la empresa.
 * Total_reviews (text, pero representa valores numéricos).
 * Avg_salary (text, pero representa valores numéricos).
@@ -91,22 +73,14 @@ Empleados.
 Los que representan valores numéricos pero son text, es porque sus números están expresados como “3k” en vez de 3000.
 
 
-
-
 9. ¿Qué atributos son categóricos?
-
 
 * Company_name 
 * Highly_rated_for 
 * Critically_rated_for
 
 
-
-
 10. ¿Qué atributos son de tipo texto?
-
-
-
 
 * Company_name
 * Description
@@ -116,11 +90,11 @@ Los que representan valores numéricos pero son text, es porque sus números est
 
 11. ¿Qué atributos son de tipo temporal y/o fecha?
 
-
 Ninguno.
 
 
 12. ¿Cuál es el objetivo buscado con el set de datos? ¿Para qué  se usará por el equipo?
+
 El objetivo de este conjunto de datos es proporcionar información detallada sobre las principales 10,000 empresas, permitiendo analizar factores clave del mercado laboral. El equipo lo utilizará para:
 * Evaluar las opiniones de los empleados sobre sus empresas.
 * Identificar los aspectos más valorados y criticados en las compañías.
@@ -130,7 +104,6 @@ El objetivo de este conjunto de datos es proporcionar información detallada sob
 
 
 13. ¿Qué consideraciones éticas conlleva el análisis y explotación de dichos datos?
-
 
 * Privacidad y anonimización: Asegurar que los datos personales de empleados o evaluadores estén protegidos y, si es necesario, anonimizar información sensible.
 * Uso responsable de la información: No utilizar los datos para generar informes sesgados o manipulados que puedan afectar injustamente la reputación de una empresa o individuo.
