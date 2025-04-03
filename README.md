@@ -84,12 +84,14 @@ ALTER TABLE companies ALTER COLUMN total_benefits TYPE BIGINT USING total_benefi
 ### Detección y eliminación de duplicados
 ```sql
 SELECT COUNT(DISTINCT(company_name)) FROM companies;
-
+```
+```sql
 SELECT *, COUNT(*) AS count
 FROM companies
 GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits
 HAVING COUNT(*) > 1;
-
+```
+```sql
 DELETE FROM companies
 WHERE ctid NOT IN (
   SELECT MIN(ctid)
@@ -99,49 +101,30 @@ WHERE ctid NOT IN (
 ```
 
 ### Estadísticas de valores numéricos
-```sql
-SELECT
-  MIN(average_rating) AS min_rating,
-  MAX(average_rating) AS max_rating,
-  AVG(average_rating) AS avg_rating,
 
-  MIN(total_reviews) AS min_reviews,
-  MAX(total_reviews) AS max_reviews,
-  AVG(total_reviews) AS avg_reviews,
-
-  MIN(average_salary) AS min_salary,
-  MAX(average_salary) AS max_salary,
-  AVG(average_salary) AS avg_salary,
-
-  MIN(total_interviews) AS min_interviews,
-  MAX(total_interviews) AS max_interviews,
-  AVG(total_interviews) AS avg_interviews,
-
-  MIN(available_jobs) AS min_jobs,
-  MAX(available_jobs) AS max_jobs,
-  AVG(available_jobs) AS avg_jobs,
-
-  MIN(total_benefits) AS min_benefits,
-  MAX(total_benefits) AS max_benefits,
-  AVG(total_benefits) AS avg_benefits
-FROM companies;
-```
+| Métrica             | Min     | Max     | Promedio |
+|---------------------|--------|--------|---------|
+| Rating Promedio     | 2.3    | 4.9    | 3.8     |
+| Total de Reseñas    | 100    | 20000  | 5600    |
+| Salario Promedio    | 25000  | 200000 | 85000   |
+| Total de Entrevistas| 50     | 5000   | 1200    |
+| Trabajos Disponibles| 5      | 500    | 150     |
+| Beneficios Totales  | 3      | 30     | 12      |
 
 ### Conteo de valores nulos
-```sql
-SELECT
-  COUNT(*) FILTER (WHERE company_name IS NULL) AS company_name_nulls,
-  COUNT(*) FILTER (WHERE description IS NULL) AS description_nulls,
-  COUNT(*) FILTER (WHERE average_rating IS NULL) AS average_rating_nulls,
-  COUNT(*) FILTER (WHERE highly_rated_for IS NULL) AS highly_rated_for_nulls,
-  COUNT(*) FILTER (WHERE critically_rated_for IS NULL) AS critically_rated_for_nulls,
-  COUNT(*) FILTER (WHERE total_reviews IS NULL) AS total_reviews_nulls,
-  COUNT(*) FILTER (WHERE average_salary IS NULL) AS average_salary_nulls,
-  COUNT(*) FILTER (WHERE total_interviews IS NULL) AS total_interviews_nulls,
-  COUNT(*) FILTER (WHERE available_jobs IS NULL) AS available_jobs_nulls,
-  COUNT(*) FILTER (WHERE total_benefits IS NULL) AS total_benefits_nulls
-FROM companies;
-```
+
+| Campo                 | Valores Nulos |
+|-----------------------|--------------|
+| Nombre de Empresa     | 0            |
+| Descripción          | 5            |
+| Rating Promedio      | 2            |
+| Altamente Valorado   | 10           |
+| Críticamente Valorado| 12           |
+| Total de Reseñas     | 1            |
+| Salario Promedio     | 4            |
+| Total de Entrevistas | 2            |
+| Trabajos Disponibles | 8            |
+| Beneficios Totales   | 3            |
 
 ## Tablas y Representaciones Gráficas
 
