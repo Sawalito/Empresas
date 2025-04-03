@@ -4,7 +4,7 @@
 * Natalia Quintana 
 * Silvestre Rosales 
 * Saúl Rojas
-Los atos originales se encuentran en el archivo companies.csv
+Los datos originales se encuentran en el archivo companies.csv
 
 
 1. Descripción general de los datos
