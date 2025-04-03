@@ -46,7 +46,7 @@ Este análisis implica responsabilidad en el uso de los datos:
 ```bash
 git clone [URL_DEL_REPOSITORIO]
 cd Empresas
-
+```
 
 ## Instrucciones para psql
 
