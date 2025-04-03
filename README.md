@@ -1,4 +1,4 @@
-# Proyecto Bases de Datos - Entrega 2
+# Proyecto Bases de Datos
 
 **Integrantes:**
 - Alejandro Castillo
@@ -6,6 +6,47 @@
 - Natalia Quintana
 - Silvestre Rosales
 - Saúl Rojas
+
+# **Top Companies**
+
+## **Introducción**
+Este proyecto tiene como objetivo analizar y limpiar un conjunto de datos sobre las principales 10,000 empresas, facilitando la extracción de información clave sobre calificaciones, salarios y beneficios. 
+
+
+### **Propósito del Proyecto**
+El análisis de datos de empresas permite comprender tendencias del mercado laboral, identificando:
+- **Factores clave** que influyen en la percepción de una empresa.
+- **Promedios salariales** y condiciones laborales en distintas industrias.
+- **Beneficios más valorados** por empleados y candidatos a puestos de trabajo.
+
+Este conjunto de datos contiene información sobre las principales **10,000 empresas**, incluyendo:
+- Nombre y descripción.
+- Calificación promedio.
+- Aspectos más valorados y criticados.
+- Total de reseñas, salario promedio y cantidad de entrevistas realizadas.
+- Número de empleos disponibles y beneficios ofrecidos.
+
+### **Fuente del Dataset**
+- **Recolector**: Vedant Khapekar.
+- **Fuente original**: Ambition Box, una plataforma de reclutamiento.
+- **Disponibilidad**: Se encuentra en **Kaggle**.
+- **Frecuencia de actualización**: No se actualiza, aunque los datos cambien en Ambition Box.
+
+### **Consideraciones Éticas**
+Este análisis implica responsabilidad en el uso de los datos:
+- **Privacidad**: Asegurar que la información sensible esté protegida.
+- **Uso responsable**: Evitar interpretaciones sesgadas o manipuladas.
+- **Transparencia**: Definir claramente metodologías y fuentes de datos.
+- **Evitar discriminación**: No favorecer a empresas por tamaño, ubicación o industria.
+
+---
+
+## **Instalación y Configuración**
+### **1. Clonar el repositorio**
+```bash
+git clone [URL_DEL_REPOSITORIO]
+cd Empresas
+
 
 ## Instrucciones para psql
 
@@ -38,13 +79,16 @@ CREATE TABLE companies (
 );
 ```
 
-### Importar datos desde un archivo CSV
+### Importar datos desde el archivo CSV
 > **IMPORTANTE:** Cambiar la dirección del archivo antes de ejecutar el comando.
 ```sql
 SET CLIENT_ENCODING TO 'UTF8';
 \copy companies (company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits) 
 FROM 'C:/Users/Light 16 Pro/Downloads/companies.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',');
 ```
+
+
+
 
 ## Limpieza y conversión de datos
 

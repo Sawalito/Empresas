@@ -1,14 +1,10 @@
 # Entrega 1 del proyecto de Bases de Datos
 
-* ### Alejandro Castillo
-
-* ### Jorge Lafarga 
-
-* ### Natalia Quintana 
-
-* ### Silvestre Rosales 
-
-* ### Saúl Rojas
+- Alejandro Castillo
+- Jorge Lafarga
+- Natalia Quintana
+- Silvestre Rosales
+- Saúl Rojas
 
 Los datos originales se encuentran en el archivo companies.csv
 
