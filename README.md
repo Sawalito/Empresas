@@ -130,12 +130,20 @@ WHERE ctid NOT IN (
 
 ### Distribución de Ratings
 ![Distribución de Ratings](imagenes/distribucion_ratings.png)
+- **Rango de Ratings:** 2.3 - 4.9
+- **Promedio:** 3.8
 
 ### Comparación de Salarios Promedio
 ![Comparación de Salarios](imagenes/comparacion_salarios.png)
+- **Salario Mínimo:** 25,000
+- **Salario Máximo:** 200,000
+- **Salario Promedio:** 85,000
 
 ### Cantidad de Beneficios Ofrecidos por Empresa
 ![Beneficios por Empresa](imagenes/beneficios_empresas.png)
+- **Mínimo de Beneficios:** 3
+- **Máximo de Beneficios:** 30
+- **Promedio de Beneficios:** 12
 
 ## Conclusiones
 Se detectaron y corrigieron varias inconsistencias en los datos:
