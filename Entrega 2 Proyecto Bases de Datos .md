@@ -286,7 +286,7 @@ Ahora, el siguiente codigo cuenta las apariciones de cada categoria:
 ```
 
   Regresa los siguientes valores:
-  ![alt text](image-1.png)
+  ![alt text](image.png)
 
 * **Conteo de valores nulos**  
   * Utilicé el siguiente código para contar nulos por columna:  
@@ -305,7 +305,8 @@ Ahora, el siguiente codigo cuenta las apariciones de cada categoria:
     FROM companies;  
 ```      
     Regresa lo siguiente:  
-    ![alt text](image.png)
+    ![alt text](image-1.png)
+    
 
 
 * **¿Existen inconsistencias en el set de datos?**  
