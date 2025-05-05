@@ -8,13 +8,13 @@
 
 **\-- Borrar y crear database**
 ```sql
-DROP DATABASE IF EXISTS top\_companies;  
-CREATE DATABASE top\_companies;
+DROP DATABASE IF EXISTS top_companies;  
+CREATE DATABASE top_companies;
 ```
 
 **\--  Conectarse al database**
 ```sql
-\\c top\_companies;
+\\c top_companies;
 ```
 
 **\-- Borrar y crear tabla**
@@ -44,81 +44,81 @@ SET CLIENT_ENCODING TO 'UTF8';
 \copy companies FROM 'C:/Users/Light 16 Pro/Downloads/companies.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',');
 ```
 
-**\-- Ingresar a TablePlus y conectarse a la base de datos “top\_companies”**
+**\-- Ingresar a TablePlus y conectarse a la base de datos “top_companies”**
 
 
 **Código SQL para limpiar y convertir columnas a sus tipos de datos respectivos para poderse analizar** 
 
-– El siguiente código convierte los valores de 2.5k a 2500 para poder ser analizados como números. Esto se hace para total\_reviews, average\_salary, total\_interviews y available\_jobs. 
+– El siguiente código convierte los valores de 2.5k a 2500 para poder ser analizados como números. Esto se hace para total_reviews, average_salary, total_interviews y available_jobs. 
 ```sql
-UPDATE companies SET total\_reviews \= (  
+UPDATE companies SET total_reviews = (  
   CASE  
-    WHEN total\_reviews ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(total\_reviews), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN total\_reviews \= '--' OR total\_reviews IS NULL THEN NULL  
-    ELSE total\_reviews  
+    WHEN total_reviews ILIKE '%k' THEN  
+      (CAST(REPLACE(LOWER(total_reviews), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
+    WHEN total_reviews \= '--' OR total_reviews IS NULL THEN NULL  
+    ELSE total_reviews  
   END  
 );
 
-UPDATE companies SET average\_salary \= (  
+UPDATE companies SET average_salary \= (  
   CASE  
-    WHEN average\_salary ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(average\_salary), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN average\_salary \= '--' OR average\_salary IS NULL THEN NULL  
-    ELSE average\_salary  
+    WHEN average_salary ILIKE '%k' THEN  
+      (CAST(REPLACE(LOWER(average_salary), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
+    WHEN average_salary \= '--' OR average_salary IS NULL THEN NULL  
+    ELSE average_salary  
   END  
 );
 
-UPDATE companies SET total\_interviews \= (  
+UPDATE companies SET total_interviews \= (  
   CASE  
-    WHEN total\_interviews ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(total\_interviews), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN total\_interviews \= '--' OR total\_interviews IS NULL THEN NULL  
-    ELSE total\_interviews  
+    WHEN total_interviews ILIKE '%k' THEN  
+      (CAST(REPLACE(LOWER(total_interviews), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
+    WHEN total_interviews \= '--' OR total_interviews IS NULL THEN NULL  
+    ELSE total_interviews  
   END  
 );
 
-UPDATE companies SET available\_jobs \= (  
+UPDATE companies SET available_jobs \= (  
   CASE  
-    WHEN available\_jobs ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(available\_jobs), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN available\_jobs \= '--' OR available\_jobs IS NULL THEN NULL  
-    ELSE available\_jobs  
+    WHEN available_jobs ILIKE '%k' THEN  
+      (CAST(REPLACE(LOWER(available_jobs), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
+    WHEN available_jobs \= '--' OR available_jobs IS NULL THEN NULL  
+    ELSE available_jobs  
   END  
 );
 
-UPDATE companies SET total\_benefits \= (  
+UPDATE companies SET total_benefits \= (  
   CASE  
-    WHEN total\_benefits ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(total\_benefits), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN total\_benefits \= '--' OR total\_benefits IS NULL THEN NULL  
-    ELSE total\_benefits  
+    WHEN total_benefits ILIKE '%k' THEN  
+      (CAST(REPLACE(LOWER(total_benefits), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
+    WHEN total_benefits \= '--' OR total_benefits IS NULL THEN NULL  
+    ELSE total_benefits  
   END  
 );
 ```
 \-- Una vez modificados los datos, podemos cambiar el tipo de dato en la tabla para guardar mas espacio y ser mas eficientes
 ```sql
-ALTER TABLE companies ALTER COLUMN total\_reviews TYPE BIGINT USING total\_reviews::BIGINT;
+ALTER TABLE companies ALTER COLUMN total_reviews TYPE BIGINT USING total_reviews::BIGINT;
 
-ALTER TABLE companies ALTER COLUMN average\_salary TYPE BIGINT USING average\_salary::BIGINT;
+ALTER TABLE companies ALTER COLUMN average_salary TYPE BIGINT USING average_salary::BIGINT;
 
-ALTER TABLE companies ALTER COLUMN total\_interviews TYPE BIGINT USING total\_interviews::BIGINT;
+ALTER TABLE companies ALTER COLUMN total_interviews TYPE BIGINT USING total_interviews::BIGINT;
 
-ALTER TABLE companies ALTER COLUMN available\_jobs TYPE BIGINT USING available\_jobs::BIGINT;
+ALTER TABLE companies ALTER COLUMN available_jobs TYPE BIGINT USING available_jobs::BIGINT;
 
-ALTER TABLE companies ALTER COLUMN total\_benefits TYPE BIGINT USING total\_benefits::BIGINT;
+ALTER TABLE companies ALTER COLUMN total_benefits TYPE BIGINT USING total_benefits::BIGINT;
 
 ALTER TABLE companies  
-ALTER COLUMN company\_name TYPE VARCHAR(255);
+ALTER COLUMN company_name TYPE VARCHAR(255);
 
 ALTER TABLE companies  
 ALTER COLUMN description TYPE VARCHAR(255);
 
 ALTER TABLE companies  
-ALTER COLUMN highly\_rated\_for TYPE VARCHAR(255);
+ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
 
 ALTER TABLE companies  
-ALTER COLUMN critically\_rated\_for TYPE VARCHAR(255);
+ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 ```
 
 **Consultas utilizadas para analizar los datos**
@@ -129,16 +129,16 @@ ALTER COLUMN critically\_rated\_for TYPE VARCHAR(255);
 
 \-- Cuenta la cantidad de compañías distintas asumiendo que si dos se llaman igual, son la misma compañía. Regresa 9355
 ```sql
-SELECT COUNT(DISTINCT(company\_name))  
+SELECT COUNT(DISTINCT(company_name))  
 FROM companies;
 ```
 \-- Regresa todas las compañías que aparecen mas de una vez y que además todos sus atributos son iguales, es decir, son tuplas repetidas/ Regresa 641, por lo que hay 4 tuplas que tienen nombres repetidos pero atributos diferentes
 ```sql
 SELECT \*, COUNT(\*) AS count  
 FROM companies  
-GROUP BY company\_name, description, average\_rating, highly\_rated\_for,  
-         critically\_rated\_for, total\_reviews, average\_salary,  
-         total\_interviews, available\_jobs, total\_benefits  
+GROUP BY company_name, description, average_rating, highly_rated_for,  
+         critically_rated_for, total_reviews, average_salary,  
+         total_interviews, available_jobs, total_benefits  
 HAVING COUNT(\*) \> 1;
 ```
 \-- Elimina todas las tuplas duplicadas, solo si todos sus atributos son iguales
@@ -147,20 +147,20 @@ DELETE FROM companies
 WHERE ctid NOT IN (  
   SELECT MIN(ctid)  
   FROM companies  
-  GROUP BY company\_name, description, average\_rating, highly\_rated\_for, critically\_rated\_for, total\_reviews, average\_salary, total\_interviews, available\_jobs, total\_benefits  
+  GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits  
 );
 ```
 \-- Regresa todas las tuplas que tienen el mismo nomre. Regresa 8 tuplas, por lo que hay 4 pares de tuplas con el mismo nombre. Podemos observar que todos sus atributos son iguales a excepcion de "description", que al momento de enlistar las sucursales, vienen en distinto orden
 ```sql
 SELECT \*  
 FROM companies  
-WHERE company\_name IN (  
-  SELECT company\_name  
+WHERE company_name IN (  
+  SELECT company_name  
   FROM companies  
-  GROUP BY company\_name  
+  GROUP BY company_name  
   HAVING COUNT(\*) \> 1  
 )  
-ORDER BY company\_name;
+ORDER BY company_name;
 ```
 \-- Elimina todas las tuplas repetidas sin considerar descripcion
 ```sql
@@ -168,7 +168,7 @@ DELETE FROM companies
 WHERE ctid NOT IN (  
   SELECT MIN(ctid)  
   FROM companies  
-  GROUP BY company\_name, average\_rating, highly\_rated\_for, critically\_rated\_for, total\_reviews, average\_salary, total\_interviews, total\_benefits  
+  GROUP BY company_name, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, total_benefits  
 );
 ```
 
@@ -194,62 +194,62 @@ WHERE ctid NOT IN (
 ```sql
     SELECT
 
-      MIN(average\_rating) AS min\_rating,
+      MIN(average_rating) AS min_rating,
 
-      MAX(average\_rating) AS max\_rating,
+      MAX(average_rating) AS max_rating,
 
-      AVG(average\_rating) AS avg\_rating,
-
-    
-
-      MIN(total\_reviews) AS min\_reviews,
-
-      MAX(total\_reviews) AS max\_reviews,
-
-      AVG(total\_reviews) AS avg\_reviews,
+      AVG(average_rating) AS avg_rating,
 
     
 
-      MIN(average\_salary) AS min\_salary,
+      MIN(total_reviews) AS min_reviews,
 
-      MAX(average\_salary) AS max\_salary,
+      MAX(total_reviews) AS max_reviews,
 
-      AVG(average\_salary) AS avg\_salary,
-
-    
-
-      MIN(total\_interviews) AS min\_interviews,
-
-      MAX(total\_interviews) AS max\_interviews,
-
-      AVG(total\_interviews) AS avg\_interviews,
+      AVG(total_reviews) AS avg_reviews,
 
     
 
-      MIN(available\_jobs) AS min\_jobs,
+      MIN(average_salary) AS min_salary,
 
-      MAX(available\_jobs) AS max\_jobs,
+      MAX(average_salary) AS max_salary,
 
-      AVG(available\_jobs) AS avg\_jobs,
+      AVG(average_salary) AS avg_salary,
 
     
 
-      MIN(total\_benefits) AS min\_benefits,
+      MIN(total_interviews) AS min_interviews,
 
-      MAX(total\_benefits) AS max\_benefits,
+      MAX(total_interviews) AS max_interviews,
 
-      AVG(total\_benefits) AS avg\_benefits
+      AVG(total_interviews) AS avg_interviews,
+
+    
+
+      MIN(available_jobs) AS min_jobs,
+
+      MAX(available_jobs) AS max_jobs,
+
+      AVG(available_jobs) AS avg_jobs,
+
+    
+
+      MIN(total_benefits) AS min_benefits,
+
+      MAX(total_benefits) AS max_benefits,
+
+      AVG(total_benefits) AS avg_benefits
 
     FROM companies;
 ```  
     
 
 * **Duplicados en atributos categóricos**  
-  * Si los hay en description, highly\_rated\_for y critically\_rated\_for si lo que se busca es todas las tuplas que compartan alguna caracteristica, por ejemplo, todas las companias que sean aclamadas favorablemente por “Job Security”, el código es el siguiente:  
+  * Si los hay en description, highly_rated_for y critically_rated_for si lo que se busca es todas las tuplas que compartan alguna caracteristica, por ejemplo, todas las companias que sean aclamadas favorablemente por “Job Security”, el código es el siguiente:  
 ```sql      
     SELECT \*  
     FROM companies  
-    WHERE highly\_rated\_for ILIKE '%Job Security%';  
+    WHERE highly_rated_for ILIKE '%Job Security%';  
 ```
 
 * **Columnas redundantes**  
@@ -257,15 +257,15 @@ WHERE ctid NOT IN (
 * **Conteo de tuplas por cada categoría**  
   * Para saber qué categorías hay, se utiliza el siguiente codigo:   
 ```sql      
-    SELECT DISTINCT TRIM(regexp\_split\_to\_table(category, ',')) AS category  
+    SELECT DISTINCT TRIM(regexp_split_to_table(category, ',')) AS category  
     FROM (  
-      SELECT highly\_rated\_for AS category FROM companies  
-      WHERE highly\_rated\_for IS NOT NULL  
+      SELECT highly_rated_for AS category FROM companies  
+      WHERE highly_rated_for IS NOT NULL  
       
       UNION ALL  
       
-      SELECT critically\_rated\_for AS category FROM companies  
-      WHERE critically\_rated\_for IS NOT NULL  
+      SELECT critically_rated_for AS category FROM companies  
+      WHERE critically_rated_for IS NOT NULL  
     ) AS combined  
     ORDER BY category;  
 ```
@@ -287,9 +287,9 @@ WHERE ctid NOT IN (
 
     category,
 
-    COUNT(CASE WHEN highly\_rated\_for ILIKE '%' || category || '%' THEN 1 END) AS highly\_rated\_for,
+    COUNT(CASE WHEN highly_rated_for ILIKE '%' || category || '%' THEN 1 END) AS highly_rated_for,
 
-    COUNT(CASE WHEN critically\_rated\_for ILIKE '%' || category || '%' THEN 1 END) AS critically\_rated\_for
+    COUNT(CASE WHEN critically_rated_for ILIKE '%' || category || '%' THEN 1 END) AS critically_rated_for
 
   FROM (
 
@@ -324,16 +324,16 @@ WHERE ctid NOT IN (
   * Utilicé el siguiente código para contar nulos por columna:  
       
     SELECT  
-      COUNT(\*) FILTER (WHERE company\_name IS NULL) AS company\_name\_nulls,  
-      COUNT(\*) FILTER (WHERE description IS NULL) AS description\_nulls,  
-      COUNT(\*) FILTER (WHERE average\_rating IS NULL) AS average\_rating\_nulls,  
-      COUNT(\*) FILTER (WHERE highly\_rated\_for IS NULL) AS highly\_rated\_for\_nulls,  
-      COUNT(\*) FILTER (WHERE critically\_rated\_for IS NULL) AS critically\_rated\_for\_nulls,  
-      COUNT(\*) FILTER (WHERE total\_reviews IS NULL) AS total\_reviews\_nulls,  
-      COUNT(\*) FILTER (WHERE average\_salary IS NULL) AS average\_salary\_nulls,  
-      COUNT(\*) FILTER (WHERE total\_interviews IS NULL) AS total\_interviews\_nulls,  
-      COUNT(\*) FILTER (WHERE available\_jobs IS NULL) AS available\_jobs\_nulls,  
-      COUNT(\*) FILTER (WHERE total\_benefits IS NULL) AS total\_benefits\_nulls  
+      COUNT(\*) FILTER (WHERE company_name IS NULL) AS company_name_nulls,  
+      COUNT(\*) FILTER (WHERE description IS NULL) AS description_nulls,  
+      COUNT(\*) FILTER (WHERE average_rating IS NULL) AS average_rating_nulls,  
+      COUNT(\*) FILTER (WHERE highly_rated_for IS NULL) AS highly_rated_for_nulls,  
+      COUNT(\*) FILTER (WHERE critically_rated_for IS NULL) AS critically_rated_for_nulls,  
+      COUNT(\*) FILTER (WHERE total_reviews IS NULL) AS total_reviews_nulls,  
+      COUNT(\*) FILTER (WHERE average_salary IS NULL) AS average_salary_nulls,  
+      COUNT(\*) FILTER (WHERE total_interviews IS NULL) AS total_interviews_nulls,  
+      COUNT(\*) FILTER (WHERE available_jobs IS NULL) AS available_jobs_nulls,  
+      COUNT(\*) FILTER (WHERE total_benefits IS NULL) AS total_benefits_nulls  
     FROM companies;  
       
     Regresa lo siguiente:  
@@ -344,15 +344,15 @@ WHERE ctid NOT IN (
   * **Sí, se detectaron algunas inconsistencias en el conjunto de datos, y se han documentado y corregido en su mayoría. Aquí un resumen de los hallazgos:**  
       
     **1\. Formato de datos no uniforme**  
-* **Varias columnas numéricas (total\_reviews, average\_salary, etc.) venían como texto con sufijo  'k' (por ejemplo, '2.5k'), lo que impedía análisis numéricos directos.**  
+* **Varias columnas numéricas (total_reviews, average_salary, etc.) venían como texto con sufijo  'k' (por ejemplo, '2.5k'), lo que impedía análisis numéricos directos.**  
 * **Se estandarizaron multiplicando los valores por 1,000 y convirtiéndolos a tipo INT, BIGINT o SMALLINT.**
 
 
   **2\. Valores NULL**
 
 * **Se identificaron valores nulos, por ejemplo, en:**  
-- **highly\_rated\_for: 92 nulos**  
-- **critically\_rated\_for: 7,193 nulos**  
+- **highly_rated_for: 92 nulos**  
+- **critically_rated_for: 7,193 nulos**  
 - **etc.**  
 * **Se consideró si reemplazarlos por 'Not Available' pero decidí mantenerlos como NULL.**
 
@@ -364,7 +364,7 @@ WHERE ctid NOT IN (
 
   **4\. Categorías combinadas en una sola columna**
 
-* **Columnas como highly\_rated\_for y critically\_rated\_for contenían múltiples categorías combinadas por comas o slashes. Se dividieron esas categorías para analizar ocurrencias individuales, y se contó la frecuencia de cada una.**
+* **Columnas como highly_rated_for y critically_rated_for contenían múltiples categorías combinadas por comas o slashes. Se dividieron esas categorías para analizar ocurrencias individuales, y se contó la frecuencia de cada una.**
 
   
 >

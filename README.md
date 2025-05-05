@@ -149,7 +149,18 @@ ALTER TABLE companies ALTER COLUMN average_salary TYPE BIGINT USING average_sala
 ALTER TABLE companies ALTER COLUMN total_interviews TYPE BIGINT USING total_interviews::BIGINT;
 ALTER TABLE companies ALTER COLUMN available_jobs TYPE BIGINT USING available_jobs::BIGINT;
 ALTER TABLE companies ALTER COLUMN total_benefits TYPE BIGINT USING total_benefits::BIGINT;
+
+ALTER TABLE companies ALTER COLUMN company_name TYPE VARCHAR(255);
+ALTER TABLE companies ALTER COLUMN description TYPE VARCHAR(255);
+ALTER TABLE companies ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
+ALTER TABLE companies ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 ```
+
+## Normalización de datos hasta cuarta formal normal
+
+
+
+
 
 ## Análisis de datos
 
