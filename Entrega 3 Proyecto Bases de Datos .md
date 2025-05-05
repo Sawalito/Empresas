@@ -99,23 +99,22 @@ WHERE ctid NOT IN (
 
 
 ## Normalización de Datos
-La normalización garantiza que los datos sean estructurados correctamente, eliminando redundancias y mejorando la integridad. Se aplican reglas **FN1 → FN2 → 4NF** con base en **dependencias funcionales y multivaluadas**.
+La normalización es un proceso esencial en el diseño de bases de datos, ya que reduce redundancias, mejora integridad y optimiza el rendimiento de consultas. En este proyecto, el conjunto de datos inicial no cumplía con Primera Forma Normal (1NF) debido a la presencia de atributos multivaluados y datos combinados en la columna ```description``.
 
-Para estructurar los datos correctamente, se identificaron entidades clave:
+Nuestro objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF), y vamos a hacerlo en orden **FN1 → FN2 → 4NF** revisando las dependencias funcionales y multivaluadas.
 
-```companies_base```: Información esencial de cada empresa.
+### Problema en la estructura de datos inicial
 
-```descriptions```: Detalles como ubicación, industria, tamaño y antigüedad.
+La columna `description` presentaba múltiples valoresccombinados en una sola cadena de texto, lo que impide un acceso eficiente a información clave sobre cada empresa.
 
-```companies_highly_rated```: Categorías que los usuarios consideran puntos fuertes de cada empresa.
+Ejemplo de `description` antes de normalizar:
+`New York | Technology | 5000 employees | Private | 20 years old`  
 
-```companies_critically_rated```: Factores con baja calificación.
+- Contiene varios atributos  en un solo campo.  
+- No está en 1NF , ya que no hay valores atómicos en cada celda.  
+- Difícil de consultar eficientemente (Ejemplo: ¿Cuántas empresas son privadas?).  
 
-```companies_descripciones```: Relación entre empresas y sus descripciones
-
-Dependencia funcional: Cada ```company_name``` determina un conjunto único de valores en ```average_rating```, ```total_reviews```, ```available_jobs``` y ```total_benefits```.
-
-Dependencias multivaluadas: Las columnas ```highly_rated_for``` y ```critically_rated_for``` contienen múltiples valores, lo que requiere su separación en entidades individuales.
+Para solucionar esto, es necesario  dividir `description` en entidades separadas , asegurando una representación clara y normalizada.
 
 ---
 
@@ -155,7 +154,15 @@ ORDER BY id;
 
 
 ### Creación de una tabla `descriptions` para separar lo que contiene la columna description
-Se separa la información de `description` en una tabla independiente para evitar **redundancias** y mejorar la estructura normalizada. `description` es un atributo compuesto, y separarlo permite una **representación más limpia en 4NF**.
+
+Para cumplir con  1NF , descomponemos la columna `description` en una nueva tabla llamada `descriptions`, donde cada empresa tendrá referencias claras a información detallada como:  
+
+| ID  | Ubicación   | Industria  | Empleados  | Tipo de empresa | Antigüedad  |
+|-----|------------|------------|------------|----------------|-------------|
+| 1   | New York   | Technology | 5000       | Private        | 20 years    |
+| 2   | San Diego  | Healthcare | 1200       | Public         | 15 years    |
+
+
 ```sql
 --Creacion de las tablas de descripcion
 
@@ -271,8 +278,23 @@ ALTER TABLE limpieza.companies DROP COLUMN description;
 
 
 ### Descomposición en FN1
-Para eliminar atributos **multivaluados**, se separa `highly_rated_for` en **filas individuales**.
-Cada valor **debe ser tratado como una entidad separada** para cumplir con **FN1**.
+Las columnas `highly_rated_for` y `critically_rated_for` contienen  múltiples valores separados por comas , lo que indica una dependencia multivaluada. Para llevar a  FN1 y FN2 , descomponemos cada categoría en una entidad propia.  
+
+Antes de la normalización:   
+| ID | Empresa       | highly_rated_for       | critically_rated_for   |
+|----|--------------|------------------------|------------------------|
+| 1  | Amazon       | Salary, Benefits       | Work-life balance     |
+
+Después de FN1 y FN2:   
+| ID | Empresa       | highly_rated_for       |
+|----|--------------|------------------------|
+| 1  | Amazon       | Salary                 |
+| 1  | Amazon       | Benefits               |
+
+| ID | Empresa       | critically_rated_for   |
+|----|--------------|------------------------|
+| 1  | Amazon       | Work-life balance      |
+
 
 ```sql
 
@@ -315,7 +337,6 @@ WHERE c.highly_rated_for IS NULL;
 
 ### *Descomposición en FN2
 Se aplica el mismo proceso para `critically_rated_for`.
-Se separan los atributos **multivaluados**, garantizando **FN2**.
 
 ```sql
 CREATE TABLE limpieza.companies_fn2 AS
@@ -364,6 +385,14 @@ SELECT * FROM limpieza.companies WHERE id = 66;
 
 ### Aplicación del Teorema de Heath (4NF)
 Se descompone la tabla final en múltiples entidades.
+La  última fase  de normalización consiste en  eliminar dependencias multivaluadas  en la base de datos utilizando el  Teorema de Heath . Esto nos permite dividir correctamente la información y generar relaciones claras sin redundancias.  
+
+Tablas finales después de 4NF:   
+- `companies_base`: Información esencial de cada empresa.  
+- `descriptions`: Atributos detallados por empresa.  
+- `companies_highly_rated`: Categorías positivas en empresas.  
+- `companies_critically_rated`: Categorías negativas en empresas.  
+- `companies_descripciones`: Relación entre empresas y su descripción.  
 
 ```sql
 --Teorema de Heath 4FN

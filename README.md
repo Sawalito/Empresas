@@ -175,8 +175,7 @@ WHERE ctid NOT IN (
 
 
 ## Normalización de datos hasta cuarta formal normal
-
-Para garantizar la integridad y eficiencia de los datos, se aplicaron técnicas de **limpieza, conversión y normalización progresiva**. Se separaron atributos multivaluados y se descompusieron entidades para alcanzar **4NF**, eliminando redundancias y mejorando la estructura.
+La normalización es un proceso esencial en el diseño de bases de datos, ya que reduce redundancias, mejora integridad y optimiza el rendimiento de consultas. En este proyecto, el conjunto de datos inicial no cumplía con Primera Forma Normal (1NF) debido a la presencia de atributos multivaluados y datos combinados en la columna ```description``.
 
 ### Asignación de Identificadores Únicos
 Para identificar cada registro de manera única, se agregó la columna `id` en `companies`, generando valores secuenciales con `ROW_NUMBER()` basado en `ctid`. Además, se creó una **secuencia automática** para gestionar futuras inserciones.
