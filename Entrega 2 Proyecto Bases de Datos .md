@@ -1,7 +1,9 @@
-### **Entrega 2 Proyecto Bases de Datos** 
-
-### **Alejandro Castillo, Jorge Lafarga, Natalia Quintana, Silvestre Rosales, Saúl Rojas**
-
+# Entrega 2 Proyecto Bases de Datos
+- Alejandro Castillo
+- Jorge Lafarga
+- Natalia Quintana
+- Silvestre Rosales
+- Saúl Rojas
 ### 
 
 ### **Instrucciones para psql**
