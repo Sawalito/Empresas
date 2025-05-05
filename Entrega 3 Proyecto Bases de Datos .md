@@ -74,25 +74,18 @@ ALTER TABLE limpieza.companies ALTER COLUMN description TYPE VARCHAR(255);
 ALTER TABLE limpieza.companies ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
 ALTER TABLE limpieza.companies ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 
-
-SELECT * FROM limpieza.companies;
-
-SELECT MIN(ctid)
-  FROM companies
-  GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits;
-
-SELECT
-    CTID
-FROM limpieza.companies;
-
-SELECT description FROM limpieza.companies;
-
-
 DELETE FROM limpieza.companies
 WHERE ctid NOT IN (
   SELECT MIN(ctid)
-  FROM companies
+  FROM limpieza.companies
   GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits
+);
+
+DELETE FROM limpieza.companies
+WHERE ctid NOT IN (  
+  SELECT MIN(ctid)
+  FROM limpieza.companies
+  GROUP BY company_name, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, total_benefits
 );
 
 ```
