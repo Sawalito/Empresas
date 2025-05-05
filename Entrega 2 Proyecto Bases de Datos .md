@@ -286,7 +286,7 @@ Ahora, el siguiente codigo cuenta las apariciones de cada categoria:
 ```
 
   Regresa los siguientes valores:
-![alt text](image-1.png)
+  ![alt text](image-1.png)
 
 * **Conteo de valores nulos**  
   * Utilicé el siguiente código para contar nulos por columna:  
@@ -316,7 +316,7 @@ Ahora, el siguiente codigo cuenta las apariciones de cada categoria:
     * Se estandarizaron multiplicando los valores por 1,000 y convirtiéndolos a tipo INT, BIGINT o SMALLINT.
 
 
-  **2\. Valores NULL**
+    **2\. Valores NULL**
     * Se identificaron valores nulos, por ejemplo, en:
       - highly_rated_for: 92 nulos  
       - critically_rated_for: 7,193 nulos
@@ -324,14 +324,12 @@ Ahora, el siguiente codigo cuenta las apariciones de cada categoria:
     * Se consideró si reemplazarlos por 'Not Available' pero decidí mantenerlos como NULL.
 
 
-  **3\. Filas duplicadas**
+    **3\. Filas duplicadas**
+      * Se detectaron filas completamente duplicadas y también otras muy similares, donde solo cambiaba un atributo irrelevante, por lo que se hizo un análisis de tuplas repetidoas y posteriormente se eliminaron.
 
-* **Se detectaron filas completamente duplicadas y también otras muy similares, donde solo cambiaba un atributo irrelevante, por lo que se hizo un análisis de tuplas repetidoas y posteriormente se eliminaron.**
 
-
-  **4\. Categorías combinadas en una sola columna**
-
-* **Columnas como highly_rated_for y critically_rated_for contenían múltiples categorías combinadas por comas o slashes. Se dividieron esas categorías para analizar ocurrencias individuales, y se contó la frecuencia de cada una.**
+   **4\. Categorías combinadas en una sola columna**
+      * Columnas como highly_rated_for y critically_rated_for contenían múltiples categorías combinadas por comas o slashes. Se dividieron esas categorías para analizar ocurrencias individuales, y se contó la frecuencia de cada una.
 
   
 >
