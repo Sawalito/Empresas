@@ -92,7 +92,7 @@ FROM 'C:/Users/Light 16 Pro/Downloads/companies.csv' WITH (FORMAT csv, HEADER tr
 
 ## Limpieza y conversión de datos
 
-### Conversión de valores con sufijo "k" a números enteros
+### Conversión de valores con sufijo "k" a números enteros, y "--" a NULL
 ```sql
 UPDATE companies SET total_reviews = (
   CASE
@@ -113,6 +113,34 @@ UPDATE companies SET average_salary = (
 );
 ```
 (Se repiten los mismos pasos para `total_interviews`, `available_jobs` y `total_benefits`)
+```sql
+UPDATE companies SET total_interviews = (
+  CASE
+    WHEN total_interviews ILIKE '%k' THEN
+      (CAST(REPLACE(LOWER(total_interviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+    WHEN total_interviews = '--' OR total_interviews IS NULL THEN NULL
+    ELSE total_interviews
+  END
+);
+UPDATE companies SET available_jobs = (
+  CASE
+    WHEN available_jobs ILIKE '%k' THEN
+      (CAST(REPLACE(LOWER(available_jobs), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+    WHEN available_jobs = '--' OR available_jobs IS NULL THEN NULL
+    ELSE available_jobs
+  END
+);
+UPDATE companies SET total_benefits = (
+  CASE
+    WHEN total_benefits ILIKE '%k' THEN
+      (CAST(REPLACE(LOWER(total_benefits), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+    WHEN total_benefits = '--' OR total_benefits IS NULL THEN NULL
+    ELSE total_benefits
+  END
+);
+```
+
+
 
 ### Modificación del tipo de datos
 ```sql
