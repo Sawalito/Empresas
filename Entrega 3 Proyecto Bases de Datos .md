@@ -397,10 +397,10 @@ Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4
 ---
 
 Tablas resultantes para el proyecto:
+- companies_base
+- companies_critically_rated
+- companies_descripciones
+- companies_highly_rated
+- descriptions
 
-companies_base
-companies_critically_rated
-companies_descripciones
-companies_highly_rated
-descriptions
 
