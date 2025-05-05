@@ -7,7 +7,7 @@
 - Saúl Rojas
 
 ### Normalización de datos hasta cuarta formal normal
-Para no regarla, creamos un esquema limpieza que asegura una separacion entre los datos originales y estos procesados. El siguiente codigo tiene la entrega pasada de limpieza y conversion de datos
+Para no regarla, creamos un esquema limpieza que asegura una separacion entre los datos originales y estos procesados. El siguiente codigo tiene la entrega pasada de limpieza y conversion de datos.
 
 ```sql
 CREATE SCHEMA limpieza;
@@ -216,5 +216,191 @@ FROM (
 
 Esto permite almacenar cada atributo en su **propia columna**, facilitando análisis.
 
+```sql
+-- Actualiza la columna 'location' en la tabla 'descriptions'.
+-- Extrae la última parte del atributo 'description' (separado por '|') como ubicación.
+UPDATE limpieza.descriptions
+SET location = TRIM(
+    SPLIT_PART(description, '|', array_length(string_to_array(description, '|'), 1))
+)
+WHERE description IS NOT NULL;
+
+--Comprobacion
+SELECT * FROM  limpieza.descriptions ORDER BY id;
+
+SELECT * FROM limpieza.descriptions;
+
+SELECT COUNT(*) FROM limpieza.descriptions;
+
+
+SELECT COUNT(DISTINCT description) FROM limpieza.companies;
+```
+En la tabla companies cambiar `description` por 'descripcion_id'.
+```sql
+-- Agregar columna de descripcion
+ALTER TABLE limpieza.companies
+ADD COLUMN descripcion_id INTEGER;
+
+UPDATE limpieza.companies c
+SET descripcion_id = d.id
+FROM limpieza.descriptions d
+WHERE c.description = d.description;
+
+ALTER TABLE limpieza.descriptions DROP COLUMN description;
+SELECT * FROM limpieza.descriptions ORDER BY id;
+
+SELECT * FROM limpieza.companies;
+ALTER TABLE limpieza.companies DROP COLUMN description;
+```
 ---
+
+
+### Descomposición en FN1
+Para eliminar atributos **multivaluados**, se separa `highly_rated_for` en **filas individuales**.
+Cada valor **debe ser tratado como una entidad separada** para cumplir con **FN1**.
+
+```sql
+
+--LLevar a FN1
+DROP TABLE IF EXISTS limpieza.companies_fn1;
+
+CREATE TABLE limpieza.companies_fn1 AS
+
+-- Filas con valores individuales de highly_rated_for
+SELECT
+    c.id,
+    c.company_name,
+    c.average_rating,
+    TRIM(value) AS rating_value,
+    c.critically_rated_for,
+    c.total_reviews,
+    c.available_jobs,
+    c.total_benefits,
+    c.descripcion_id
+FROM limpieza.companies c,
+     LATERAL regexp_split_to_table(c.highly_rated_for, '\s*,\s*') AS value
+
+UNION ALL
+
+-- Fila única cuando highly_rated_for es NULL
+SELECT
+    c.id,
+    c.company_name,
+    c.average_rating,
+    NULL AS rating_value,
+    c.critically_rated_for,
+    c.total_reviews,
+    c.available_jobs,
+    c.total_benefits,
+    c.descripcion_id
+FROM limpieza.companies c
+WHERE c.highly_rated_for IS NULL;
+```
+
+
+### *Descomposición en FN2
+Se aplica el mismo proceso para `critically_rated_for`.
+Se separan los atributos **multivaluados**, garantizando **FN2**.
+
+```sql
+CREATE TABLE limpieza.companies_fn2 AS
+-- Descomposición de critically_rated_for
+SELECT
+    c.id,
+    c.company_name,
+    c.average_rating,
+    c.rating_value AS highly_rated_for_value,
+    TRIM(value) AS critically_rated_for_value,
+    c.total_reviews,
+    c.available_jobs,
+    c.total_benefits,
+    c.descripcion_id
+FROM limpieza.companies_fn1 c,
+     LATERAL regexp_split_to_table(c.critically_rated_for, '\s*,\s*') AS value
+
+UNION ALL
+
+-- Fila con NULL si critically_rated_for lo es
+SELECT
+    c.id,
+    c.company_name,
+    c.average_rating,
+    c.rating_value AS highly_rated_for_value,
+    NULL AS critically_rated_for_value,
+    c.total_reviews,
+    c.available_jobs,
+    c.total_benefits,
+    c.descripcion_id
+FROM limpieza.companies_fn1 c
+WHERE c.critically_rated_for IS NULL;
+```
+```sql
+SELECT * FROM limpieza.companies_fn2 WHERE id = 66;
+
+SELECT * FROM limpieza.companies_fn2 ORDER BY id;
+
+SELECT * FROM limpieza.companies_fn1 ORDER BY id;
+
+SELECT * FROM limpieza.companies WHERE id = 66;
+```
+
+
+---
+
+### Aplicación del Teorema de Heath (4NF)
+Se descompone la tabla final en múltiples entidades.
+
+```sql
+--Teorema de Heath 4FN
+
+--DROP TABLE limpieza.companies_base;
+CREATE TABLE limpieza.companies_base AS
+SELECT DISTINCT
+    id,
+    company_name,
+    average_rating,
+    total_reviews,
+    available_jobs,
+    total_benefits
+FROM limpieza.companies_fn2;
+SELECT * FROM limpieza.companies_base;
+
+--DROP TABLE limpieza.companies_descripciones;
+CREATE TABLE limpieza.companies_descripciones AS
+SELECT DISTINCT
+    id,
+    descripcion_id
+FROM limpieza.companies_fn2
+WHERE descripcion_id IS NOT NULL;
+SELECT * FROM limpieza.companies_descripciones ORDER BY id;
+
+--DROP TABLE limpieza.companies_highly_rated
+CREATE TABLE limpieza.companies_highly_rated AS
+SELECT DISTINCT
+    id,
+    highly_rated_for_value AS rating_value
+FROM limpieza.companies_fn2
+WHERE highly_rated_for_value IS NOT NULL;
+SELECT * FROM limpieza.companies_highly_rated ORDER BY id;
+
+--DROP TABLE limpieza.companies_critically_rated
+CREATE TABLE limpieza.companies_critically_rated AS
+SELECT DISTINCT
+    id,
+    critically_rated_for_value AS rating_value
+FROM limpieza.companies_fn2
+WHERE critically_rated_for_value IS NOT NULL;
+SELECT * FROM limpieza.companies_critically_rated ORDER BY id;
+```
+Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4NF**.
+
+---
+
+Tablas resultantes para el proyecto:
+
+companies_base
+companies_critically_rated
+companies_descripciones
+companies_highly_rated
+descriptions
 
