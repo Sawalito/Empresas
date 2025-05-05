@@ -156,6 +156,24 @@ ALTER TABLE companies ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
 ALTER TABLE companies ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 ```
 
+### Detección y eliminación de duplicados
+```sql
+SELECT COUNT(DISTINCT(company_name)) FROM companies;
+
+SELECT *, COUNT(*) AS count
+FROM companies
+GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits
+HAVING COUNT(*) > 1;
+
+DELETE FROM companies
+WHERE ctid NOT IN (
+  SELECT MIN(ctid)
+  FROM companies
+  GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits
+);
+```
+
+
 ## Normalización de datos hasta cuarta formal normal
 
 Para garantizar la integridad y eficiencia de los datos, se aplicaron técnicas de **limpieza, conversión y normalización progresiva**. Se separaron atributos multivaluados y se descompusieron entidades para alcanzar **4NF**, eliminando redundancias y mejorando la estructura.
@@ -325,24 +343,6 @@ Esta estructura optimizada **mejora la integridad referencial**, **reduce redund
 
 ## Análisis de datos
 
-### Detección y eliminación de duplicados
-```sql
-SELECT COUNT(DISTINCT(company_name)) FROM companies;
-```
-```sql
-SELECT *, COUNT(*) AS count
-FROM companies
-GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits
-HAVING COUNT(*) > 1;
-```
-```sql
-DELETE FROM companies
-WHERE ctid NOT IN (
-  SELECT MIN(ctid)
-  FROM companies
-  GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits
-);
-```
 
 ### Estadísticas de valores numéricos
 

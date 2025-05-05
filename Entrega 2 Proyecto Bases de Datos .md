@@ -110,17 +110,13 @@ ALTER TABLE companies ALTER COLUMN available_jobs TYPE BIGINT USING available_jo
 
 ALTER TABLE companies ALTER COLUMN total_benefits TYPE BIGINT USING total_benefits::BIGINT;
 
-ALTER TABLE companies  
-ALTER COLUMN company_name TYPE VARCHAR(255);
+ALTER TABLE companies  ALTER COLUMN company_name TYPE VARCHAR(255);
 
-ALTER TABLE companies  
-ALTER COLUMN description TYPE VARCHAR(255);
+ALTER TABLE companies  ALTER COLUMN description TYPE VARCHAR(255);
 
-ALTER TABLE companies  
-ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
+ALTER TABLE companies  ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
 
-ALTER TABLE companies  
-ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
+ALTER TABLE companies  ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 ```
 
 **Consultas utilizadas para analizar los datos**
@@ -134,6 +130,7 @@ ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 SELECT COUNT(DISTINCT(company_name))  
 FROM companies;
 ```
+
 \-- Regresa todas las compañías que aparecen mas de una vez y que además todos sus atributos son iguales, es decir, son tuplas repetidas/ Regresa 641, por lo que hay 4 tuplas que tienen nombres repetidos pero atributos diferentes
 ```sql
 SELECT *, COUNT(*) AS count  
@@ -143,6 +140,7 @@ GROUP BY company_name, description, average_rating, highly_rated_for,
          total_interviews, available_jobs, total_benefits  
 HAVING COUNT(*) \> 1;
 ```
+
 \-- Elimina todas las tuplas duplicadas, solo si todos sus atributos son iguales
 ```sql
 DELETE FROM companies  
@@ -152,6 +150,7 @@ WHERE ctid NOT IN (
   GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits  
 );
 ```
+
 \-- Regresa todas las tuplas que tienen el mismo nomre. Regresa 8 tuplas, por lo que hay 4 pares de tuplas con el mismo nombre. Podemos observar que todos sus atributos son iguales a excepcion de "description", que al momento de enlistar las sucursales, vienen en distinto orden
 ```sql
 SELECT *  
@@ -164,6 +163,7 @@ WHERE company_name IN (
 )  
 ORDER BY company_name;
 ```
+
 \-- Elimina todas las tuplas repetidas sin considerar descripcion
 ```sql
 DELETE FROM companies  
@@ -176,6 +176,7 @@ WHERE ctid NOT IN (
 
 * **Mínimos y máximos de fechas**  
   * No hay fechas  
+
 * **Mínimos, máximos y promedios de valores numéricos**  
   * Los valores son los siguientes:
 
@@ -195,51 +196,28 @@ WHERE ctid NOT IN (
     
 ```sql
     SELECT
-
       MIN(average_rating) AS min_rating,
-
       MAX(average_rating) AS max_rating,
-
       AVG(average_rating) AS avg_rating,
 
-    
-
       MIN(total_reviews) AS min_reviews,
-
       MAX(total_reviews) AS max_reviews,
-
       AVG(total_reviews) AS avg_reviews,
 
-    
-
       MIN(average_salary) AS min_salary,
-
       MAX(average_salary) AS max_salary,
-
       AVG(average_salary) AS avg_salary,
 
-    
-
       MIN(total_interviews) AS min_interviews,
-
       MAX(total_interviews) AS max_interviews,
-
       AVG(total_interviews) AS avg_interviews,
 
-    
-
       MIN(available_jobs) AS min_jobs,
-
       MAX(available_jobs) AS max_jobs,
-
       AVG(available_jobs) AS avg_jobs,
 
-    
-
       MIN(total_benefits) AS min_benefits,
-
       MAX(total_benefits) AS max_benefits,
-
       AVG(total_benefits) AS avg_benefits
 
     FROM companies;
@@ -256,6 +234,7 @@ WHERE ctid NOT IN (
 
 * **Columnas redundantes**  
   * No las hay  
+
 * **Conteo de tuplas por cada categoría**  
   * Para saber qué categorías hay, se utiliza el siguiente codigo:   
 ```sql      
@@ -272,7 +251,7 @@ WHERE ctid NOT IN (
     ORDER BY category;  
 ```
 
-    Esto regresa las categorías:   
+Esto regresa las categorías:   
 * Company Culture  
 * Job Security  
 * Promotions / Appraisal  
@@ -282,49 +261,36 @@ WHERE ctid NOT IN (
 * Work Satisfaction
 
 
-  Ahora, el siguiente codigo cuenta las apariciones de cada categoria: 
+Ahora, el siguiente codigo cuenta las apariciones de cada categoria: 
 
 ```sql
   SELECT
-
     category,
-
     COUNT(CASE WHEN highly_rated_for ILIKE '%' || category || '%' THEN 1 END) AS highly_rated_for,
-
     COUNT(CASE WHEN critically_rated_for ILIKE '%' || category || '%' THEN 1 END) AS critically_rated_for
 
   FROM (
-
     VALUES 
-
       ('Company Culture'),
-
       ('Job Security'),
-
       ('Promotions / Appraisal'),
-
       ('Salary & Benefits'),
-
       ('Skill Development / Learning'),
-
       ('Work Life Balance'),
-
       ('Work Satisfaction')
-
   ) AS categories(category)
 
   CROSS JOIN companies
-
   GROUP BY category
-
   ORDER BY category;
 ```
 
-  Regresa los siguientes valores: ![][image1]
+  Regresa los siguientes valores:
+  ![alt text](image.png)
 
 * **Conteo de valores nulos**  
   * Utilicé el siguiente código para contar nulos por columna:  
-      
+```sql      
     SELECT  
       COUNT(*) FILTER (WHERE company_name IS NULL) AS company_name_nulls,  
       COUNT(*) FILTER (WHERE description IS NULL) AS description_nulls,  
@@ -337,36 +303,34 @@ WHERE ctid NOT IN (
       COUNT(*) FILTER (WHERE available_jobs IS NULL) AS available_jobs_nulls,  
       COUNT(*) FILTER (WHERE total_benefits IS NULL) AS total_benefits_nulls  
     FROM companies;  
-      
+```      
     Regresa lo siguiente:  
-    ![alt text](image.png)
+    ![alt text](image-1.png)
+    
 
 
 * **¿Existen inconsistencias en el set de datos?**  
-  * **Sí, se detectaron algunas inconsistencias en el conjunto de datos, y se han documentado y corregido en su mayoría. Aquí un resumen de los hallazgos:**  
+  * Sí, se detectaron algunas inconsistencias en el conjunto de datos, y se han documentado y corregido en su mayoría. Aquí un resumen de los hallazgos:
       
     **1\. Formato de datos no uniforme**  
-* **Varias columnas numéricas (total_reviews, average_salary, etc.) venían como texto con sufijo  'k' (por ejemplo, '2.5k'), lo que impedía análisis numéricos directos.**  
-* **Se estandarizaron multiplicando los valores por 1,000 y convirtiéndolos a tipo INT, BIGINT o SMALLINT.**
+    * Varias columnas numéricas (total_reviews, average_salary, etc.) venían como texto con sufijo  'k' (por ejemplo, '2.5k'), lo que impedía análisis numéricos directos.**  
+    * Se estandarizaron multiplicando los valores por 1,000 y convirtiéndolos a tipo INT, BIGINT o SMALLINT.
 
 
-  **2\. Valores NULL**
-
-* **Se identificaron valores nulos, por ejemplo, en:**  
-- **highly_rated_for: 92 nulos**  
-- **critically_rated_for: 7,193 nulos**  
-- **etc.**  
-* **Se consideró si reemplazarlos por 'Not Available' pero decidí mantenerlos como NULL.**
-
-
-  **3\. Filas duplicadas**
-
-* **Se detectaron filas completamente duplicadas y también otras muy similares, donde solo cambiaba un atributo irrelevante, por lo que se hizo un análisis de tuplas repetidoas y posteriormente se eliminaron.**
+    **2\. Valores NULL**
+    * Se identificaron valores nulos, por ejemplo, en:
+      - highly_rated_for: 92 nulos  
+      - critically_rated_for: 7,193 nulos
+      - etc. 
+    * Se consideró si reemplazarlos por 'Not Available' pero decidí mantenerlos como NULL.
 
 
-  **4\. Categorías combinadas en una sola columna**
+    **3\. Filas duplicadas**
+      * Se detectaron filas completamente duplicadas y también otras muy similares, donde solo cambiaba un atributo irrelevante, por lo que se hizo un análisis de tuplas repetidoas y posteriormente se eliminaron.
 
-* **Columnas como highly_rated_for y critically_rated_for contenían múltiples categorías combinadas por comas o slashes. Se dividieron esas categorías para analizar ocurrencias individuales, y se contó la frecuencia de cada una.**
+
+    **4\. Categorías combinadas en una sola columna**
+      * Columnas como highly_rated_for y critically_rated_for contenían múltiples categorías combinadas por comas o slashes. Se dividieron esas categorías para analizar ocurrencias individuales, y se contó la frecuencia de cada una.
 
   
 >
