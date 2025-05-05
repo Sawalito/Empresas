@@ -236,7 +236,7 @@ ALTER TABLE descriptions DROP COLUMN description;
 
 ---
 
-Normalización Progresiva
+### Normalización Progresiva
 ### Primera Forma Normal (FN1)
 `highly_rated_for` es un atributo multivaluado que se descompone en filas individuales.
 
