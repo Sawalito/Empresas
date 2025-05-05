@@ -158,6 +158,167 @@ ALTER TABLE companies ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 
 ## Normalización de datos hasta cuarta formal normal
 
+Para garantizar la integridad y eficiencia de los datos, se aplicaron técnicas de **limpieza, conversión y normalización progresiva**. Se separaron atributos multivaluados y se descompusieron entidades para alcanzar **4NF**, eliminando redundancias y mejorando la estructura.
+
+### Asignación de Identificadores Únicos
+Para identificar cada registro de manera única, se agregó la columna `id` en `companies`, generando valores secuenciales con `ROW_NUMBER()` basado en `ctid`. Además, se creó una **secuencia automática** para gestionar futuras inserciones.
+
+```sql
+ALTER TABLE companies ADD COLUMN id INTEGER;
+
+UPDATE companies
+SET id = sub.row_num
+FROM (
+  SELECT ctid, ROW_NUMBER() OVER (ORDER BY ctid) AS row_num
+  FROM companies
+) sub
+WHERE companies.ctid = sub.ctid;
+
+DROP SEQUENCE IF EXISTS companies_id_seq;
+CREATE SEQUENCE companies_id_seq;
+
+SELECT setval('companies_id_seq', (SELECT MAX(id) FROM companies));
+
+ALTER TABLE companies
+ALTER COLUMN id SET DEFAULT nextval('companies_id_seq');
+```
+
+---
+
+### Separación de Información de `description`
+La columna `description` contenía múltiples atributos combinados en texto. Para una representación más clara en **4NF**, se creó la tabla `descriptions`, separando información relevante como:
+- **Ubicación**
+- **Industria**
+- **Número de empleados**
+- **Tipo de empresa (Privada/Pública)**
+- **Antigüedad**
+
+```sql
+CREATE TABLE descriptions (
+    id SERIAL PRIMARY KEY,
+    description TEXT UNIQUE,
+    location TEXT,
+    industry TEXT,
+    employees TEXT,
+    company_type TEXT,
+    age TEXT
+);
+
+INSERT INTO descriptions (
+    description, location, industry, employees, company_type, age
+)
+SELECT DISTINCT
+    description,
+    CASE
+        WHEN description LIKE '%+% more%' THEN NULL
+        ELSE NULL
+    END AS location,
+    CASE WHEN description LIKE '%|%' THEN TRIM(SPLIT_PART(description, '|', 1)) ELSE NULL END AS industry,
+    (SELECT val FROM unnest(string_to_array(description, '|')) val WHERE val ILIKE '%employees%' LIMIT 1) AS employees,
+    (SELECT val FROM unnest(string_to_array(description, '|')) val WHERE val ILIKE 'public%' OR val ILIKE 'private%' LIMIT 1) AS company_type,
+    (SELECT val FROM unnest(string_to_array(description, '|')) val WHERE val ILIKE '%years old%' LIMIT 1) AS age
+FROM companies WHERE description IS NOT NULL;
+```
+
+Se estableció la relación `descripcion_id` en `companies` y se eliminó la columna redundante `description`.
+
+```sql
+ALTER TABLE companies ADD COLUMN descripcion_id INTEGER;
+
+UPDATE companies c
+SET descripcion_id = d.id
+FROM descriptions d
+WHERE c.description = d.description;
+
+ALTER TABLE companies DROP COLUMN description;
+ALTER TABLE descriptions DROP COLUMN description;
+```
+
+---
+
+Normalización Progresiva
+### Primera Forma Normal (FN1)
+`highly_rated_for` es un atributo multivaluado que se descompone en filas individuales.
+
+```sql
+CREATE TABLE companies_fn1 AS
+SELECT
+    c.id,
+    c.company_name,
+    c.average_rating,
+    TRIM(value) AS rating_value,
+    c.critically_rated_for,
+    c.total_reviews,
+    c.available_jobs,
+    c.total_benefits,
+    c.descripcion_id
+FROM companies c,
+     LATERAL regexp_split_to_table(c.highly_rated_for, '\s*,\s*') AS value
+
+UNION ALL
+
+SELECT
+    c.id, c.company_name, c.average_rating, NULL AS rating_value,
+    c.critically_rated_for, c.total_reviews, c.available_jobs, c.total_benefits, c.descripcion_id
+FROM companies c WHERE c.highly_rated_for IS NULL;
+```
+
+### Segunda Forma Normal (FN2)
+Se descompone `critically_rated_for` aplicando el mismo proceso.
+
+```sql
+CREATE TABLE companies_fn2 AS
+SELECT
+    c.id,
+    c.company_name,
+    c.average_rating,
+    c.rating_value AS highly_rated_for_value,
+    TRIM(value) AS critically_rated_for_value,
+    c.total_reviews,
+    c.available_jobs,
+    c.total_benefits,
+    c.descripcion_id
+FROM companies_fn1 c,
+     LATERAL regexp_split_to_table(c.critically_rated_for, '\s*,\s*') AS value
+
+UNION ALL
+
+SELECT
+    c.id, c.company_name, c.average_rating, c.rating_value AS highly_rated_for_value,
+    NULL AS critically_rated_for_value,
+    c.total_reviews, c.available_jobs, c.total_benefits, c.descripcion_id
+FROM companies_fn1 c WHERE c.critically_rated_for IS NULL;
+```
+
+### Cuarta Forma Normal (4NF) – Teorema de Heath
+Las dependencias multivaluadas se eliminan separando los datos en tablas independientes:
+
+```sql
+CREATE TABLE companies_base AS
+SELECT DISTINCT id, company_name, average_rating, total_reviews, available_jobs, total_benefits
+FROM companies_fn2;
+
+CREATE TABLE companies_descripciones AS
+SELECT DISTINCT id, descripcion_id FROM companies_fn2 WHERE descripcion_id IS NOT NULL;
+
+CREATE TABLE companies_highly_rated AS
+SELECT DISTINCT id, highly_rated_for_value AS rating_value FROM companies_fn2 WHERE highly_rated_for_value IS NOT NULL;
+
+CREATE TABLE companies_critically_rated AS
+SELECT DISTINCT id, critically_rated_for_value AS rating_value FROM companies_fn2 WHERE critically_rated_for_value IS NOT NULL;
+```
+
+---
+
+## Tablas Finales
+Después de la normalización completa, los datos están estructurados en **entidades independientes** sin dependencias multivaluadas:
+- `companies_base`
+- `companies_descripciones`
+- `companies_highly_rated`
+- `companies_critically_rated`
+- `descriptions`
+
+Esta estructura optimizada **mejora la integridad referencial**, **reduce redundancias**, y **facilita consultas eficientes** sobre tendencias en calificaciones, salarios y beneficios.
 
 
 
