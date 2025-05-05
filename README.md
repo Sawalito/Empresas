@@ -159,14 +159,12 @@ ALTER TABLE companies ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 ### Detección y eliminación de duplicados
 ```sql
 SELECT COUNT(DISTINCT(company_name)) FROM companies;
-```
-```sql
+
 SELECT *, COUNT(*) AS count
 FROM companies
 GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits
 HAVING COUNT(*) > 1;
-```
-```sql
+
 DELETE FROM companies
 WHERE ctid NOT IN (
   SELECT MIN(ctid)
