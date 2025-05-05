@@ -83,8 +83,7 @@ CREATE TABLE companies (
 > **IMPORTANTE:** Cambiar la dirección del archivo antes de ejecutar el comando.
 ```sql
 SET CLIENT_ENCODING TO 'UTF8';
-\copy companies (company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits) 
-FROM 'C:/Users/Light 16 Pro/Downloads/companies.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',');
+\copy companies (company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits) FROM 'C:/Users/Light 16 Pro/Downloads/companies.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',');
 ```
 
 
