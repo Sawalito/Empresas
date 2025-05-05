@@ -328,7 +328,7 @@ Ahora, el siguiente codigo cuenta las apariciones de cada categoria:
       * Se detectaron filas completamente duplicadas y también otras muy similares, donde solo cambiaba un atributo irrelevante, por lo que se hizo un análisis de tuplas repetidoas y posteriormente se eliminaron.
 
 
-   **4\. Categorías combinadas en una sola columna**
+    **4\. Categorías combinadas en una sola columna**
       * Columnas como highly_rated_for y critically_rated_for contenían múltiples categorías combinadas por comas o slashes. Se dividieron esas categorías para analizar ocurrencias individuales, y se contó la frecuencia de cada una.
 
   
