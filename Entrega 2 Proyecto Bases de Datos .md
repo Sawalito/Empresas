@@ -54,44 +54,44 @@ SET CLIENT_ENCODING TO 'UTF8';
 UPDATE companies SET total_reviews = (  
   CASE  
     WHEN total_reviews ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(total_reviews), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN total_reviews \= '--' OR total_reviews IS NULL THEN NULL  
+      (CAST(REPLACE(LOWER(total_reviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
+    WHEN total_reviews = '--' OR total_reviews IS NULL THEN NULL  
     ELSE total_reviews  
   END  
 );
 
-UPDATE companies SET average_salary \= (  
+UPDATE companies SET average_salary = (  
   CASE  
     WHEN average_salary ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(average_salary), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN average_salary \= '--' OR average_salary IS NULL THEN NULL  
+      (CAST(REPLACE(LOWER(average_salary), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
+    WHEN average_salary = '--' OR average_salary IS NULL THEN NULL  
     ELSE average_salary  
   END  
 );
 
-UPDATE companies SET total_interviews \= (  
+UPDATE companies SET total_interviews = (  
   CASE  
     WHEN total_interviews ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(total_interviews), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN total_interviews \= '--' OR total_interviews IS NULL THEN NULL  
+      (CAST(REPLACE(LOWER(total_interviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
+    WHEN total_interviews = '--' OR total_interviews IS NULL THEN NULL  
     ELSE total_interviews  
   END  
 );
 
-UPDATE companies SET available_jobs \= (  
+UPDATE companies SET available_jobs = (  
   CASE  
     WHEN available_jobs ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(available_jobs), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN available_jobs \= '--' OR available_jobs IS NULL THEN NULL  
+      (CAST(REPLACE(LOWER(available_jobs), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
+    WHEN available_jobs = '--' OR available_jobs IS NULL THEN NULL  
     ELSE available_jobs  
   END  
 );
 
-UPDATE companies SET total_benefits \= (  
+UPDATE companies SET total_benefits = (  
   CASE  
     WHEN total_benefits ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(total_benefits), 'k', '') AS NUMERIC) \* 1000)::BIGINT::TEXT  
-    WHEN total_benefits \= '--' OR total_benefits IS NULL THEN NULL  
+      (CAST(REPLACE(LOWER(total_benefits), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
+    WHEN total_benefits = '--' OR total_benefits IS NULL THEN NULL  
     ELSE total_benefits  
   END  
 );
@@ -134,12 +134,12 @@ FROM companies;
 ```
 \-- Regresa todas las compañías que aparecen mas de una vez y que además todos sus atributos son iguales, es decir, son tuplas repetidas/ Regresa 641, por lo que hay 4 tuplas que tienen nombres repetidos pero atributos diferentes
 ```sql
-SELECT \*, COUNT(\*) AS count  
+SELECT *, COUNT(*) AS count  
 FROM companies  
 GROUP BY company_name, description, average_rating, highly_rated_for,  
          critically_rated_for, total_reviews, average_salary,  
          total_interviews, available_jobs, total_benefits  
-HAVING COUNT(\*) \> 1;
+HAVING COUNT(*) \> 1;
 ```
 \-- Elimina todas las tuplas duplicadas, solo si todos sus atributos son iguales
 ```sql
@@ -152,13 +152,13 @@ WHERE ctid NOT IN (
 ```
 \-- Regresa todas las tuplas que tienen el mismo nomre. Regresa 8 tuplas, por lo que hay 4 pares de tuplas con el mismo nombre. Podemos observar que todos sus atributos son iguales a excepcion de "description", que al momento de enlistar las sucursales, vienen en distinto orden
 ```sql
-SELECT \*  
+SELECT *  
 FROM companies  
 WHERE company_name IN (  
   SELECT company_name  
   FROM companies  
   GROUP BY company_name  
-  HAVING COUNT(\*) \> 1  
+  HAVING COUNT(*) \> 1  
 )  
 ORDER BY company_name;
 ```
@@ -247,7 +247,7 @@ WHERE ctid NOT IN (
 * **Duplicados en atributos categóricos**  
   * Si los hay en description, highly_rated_for y critically_rated_for si lo que se busca es todas las tuplas que compartan alguna caracteristica, por ejemplo, todas las companias que sean aclamadas favorablemente por “Job Security”, el código es el siguiente:  
 ```sql      
-    SELECT \*  
+    SELECT *  
     FROM companies  
     WHERE highly_rated_for ILIKE '%Job Security%';  
 ```
@@ -324,16 +324,16 @@ WHERE ctid NOT IN (
   * Utilicé el siguiente código para contar nulos por columna:  
       
     SELECT  
-      COUNT(\*) FILTER (WHERE company_name IS NULL) AS company_name_nulls,  
-      COUNT(\*) FILTER (WHERE description IS NULL) AS description_nulls,  
-      COUNT(\*) FILTER (WHERE average_rating IS NULL) AS average_rating_nulls,  
-      COUNT(\*) FILTER (WHERE highly_rated_for IS NULL) AS highly_rated_for_nulls,  
-      COUNT(\*) FILTER (WHERE critically_rated_for IS NULL) AS critically_rated_for_nulls,  
-      COUNT(\*) FILTER (WHERE total_reviews IS NULL) AS total_reviews_nulls,  
-      COUNT(\*) FILTER (WHERE average_salary IS NULL) AS average_salary_nulls,  
-      COUNT(\*) FILTER (WHERE total_interviews IS NULL) AS total_interviews_nulls,  
-      COUNT(\*) FILTER (WHERE available_jobs IS NULL) AS available_jobs_nulls,  
-      COUNT(\*) FILTER (WHERE total_benefits IS NULL) AS total_benefits_nulls  
+      COUNT(*) FILTER (WHERE company_name IS NULL) AS company_name_nulls,  
+      COUNT(*) FILTER (WHERE description IS NULL) AS description_nulls,  
+      COUNT(*) FILTER (WHERE average_rating IS NULL) AS average_rating_nulls,  
+      COUNT(*) FILTER (WHERE highly_rated_for IS NULL) AS highly_rated_for_nulls,  
+      COUNT(*) FILTER (WHERE critically_rated_for IS NULL) AS critically_rated_for_nulls,  
+      COUNT(*) FILTER (WHERE total_reviews IS NULL) AS total_reviews_nulls,  
+      COUNT(*) FILTER (WHERE average_salary IS NULL) AS average_salary_nulls,  
+      COUNT(*) FILTER (WHERE total_interviews IS NULL) AS total_interviews_nulls,  
+      COUNT(*) FILTER (WHERE available_jobs IS NULL) AS available_jobs_nulls,  
+      COUNT(*) FILTER (WHERE total_benefits IS NULL) AS total_benefits_nulls  
     FROM companies;  
       
     Regresa lo siguiente:  
