@@ -177,7 +177,7 @@ WHERE ctid NOT IN (
 ## Normalización de datos hasta cuarta formal normal
 La normalización es un proceso esencial en el diseño de bases de datos, ya que reduce redundancias, mejora integridad y optimiza el rendimiento de consultas. En este proyecto, el conjunto de datos inicial no cumplía con Primera Forma Normal (1NF) debido a la presencia de atributos multivaluados y datos combinados en la columna ```description``.
 
-Nuestro objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF), y vamos a hacerlo en orden **FN1 → FN2 → 4NF** revisando las dependencias funcionales y multivaluadas.
+El objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF).
 
 ### Problema en la estructura de datos inicial
 La columna `description` presentaba múltiples valoresccombinados en una sola cadena de texto, lo que impide un acceso eficiente a información clave sobre cada empresa.
@@ -268,8 +268,6 @@ ALTER TABLE descriptions DROP COLUMN description;
 
 ---
 
-### Normalización Progresiva
-### Primera Forma Normal (FN1)
 `highly_rated_for` es un atributo multivaluado que se descompone en filas individuales.
 
 ```sql
@@ -294,8 +292,6 @@ SELECT
     c.critically_rated_for, c.total_reviews, c.available_jobs, c.total_benefits, c.descripcion_id
 FROM companies c WHERE c.highly_rated_for IS NULL;
 ```
-
-### Segunda Forma Normal (FN2)
 Se descompone `critically_rated_for` aplicando el mismo proceso.
 
 ```sql
