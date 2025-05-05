@@ -101,8 +101,23 @@ WHERE ctid NOT IN (
 ## Normalización de Datos
 La normalización garantiza que los datos sean estructurados correctamente, eliminando redundancias y mejorando la integridad. Se aplican reglas **FN1 → FN2 → 4NF** con base en **dependencias funcionales y multivaluadas**.
 
----
+Para estructurar los datos correctamente, se identificaron entidades clave:
 
+```companies_base```: Información esencial de cada empresa.
+
+```descriptions```: Detalles como ubicación, industria, tamaño y antigüedad.
+
+```companies_highly_rated```: Categorías que los usuarios consideran puntos fuertes de cada empresa.
+
+```companies_critically_rated```: Factores con baja calificación.
+
+```companies_descripciones```: Relación entre empresas y sus descripciones
+
+Dependencia funcional: Cada ```company_name``` determina un conjunto único de valores en ```average_rating```, ```total_reviews```, ```available_jobs``` y ```total_benefits```.
+
+Dependencias multivaluadas: Las columnas ```highly_rated_for``` y ```critically_rated_for``` contienen múltiples valores, lo que requiere su separación en entidades individuales.
+
+---
 
 ### Asignación de ID a la Tabla `companies`
 Primero, se añade una columna **`id`** a la tabla `companies`, asignando valores únicos a cada registro usando `ROW_NUMBER()` para garantizar una clave artificial.
