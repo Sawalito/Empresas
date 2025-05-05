@@ -101,7 +101,15 @@ El objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF).
 La columna `description` presentaba múltiples valoresccombinados en una sola cadena de texto, lo que impide un acceso eficiente a información clave sobre cada empresa.
 
 Ejemplo de `description` antes de normalizar:
-`New York | Technology | 5000 employees | Private | 20 years old`  
+`New York | Technology | 5000 employees | Private | 20 years old`
+
+                                     description
+--------------------------------------------------------------------------------------
+ Engineering & Construction | 51-200 Employees | 54 years old | Mumbai +12 more
+ Automobile | 5k-10k Employees | Public | 79 years old | Pune +250 more
+ IT Services & Consulting | 10k-50k Employees | Public | 34 years old | Pune +33 more
+ Power | 1k-5k Employees | Public | 18 years old | Ahmedabad +79 more
+ Noida +69 more
 
 - Contiene varios atributos  en un solo campo.  
 - No está en 1NF , ya que no hay valores atómicos en cada celda.  
