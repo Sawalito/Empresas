@@ -404,3 +404,6 @@ Tablas resultantes para el proyecto:
 - descriptions
 
 
+## Análisis de datos a través de consultas SQL y creación de atributos analíticos
+
+to be continued...
