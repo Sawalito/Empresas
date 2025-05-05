@@ -110,6 +110,7 @@ Ejemplo de `description` antes de normalizar:
 | Power \| 1k-5k Employees \| Public \| 18 years old \| Ahmedabad +79 more |  
 | Noida +69 more |  
 
+
 - Contiene varios atributos  en un solo campo.  
 - No está en 1NF , ya que no hay valores atómicos en cada celda.  
 - Difícil de consultar eficientemente (Ejemplo: ¿Cuántas empresas son privadas?).  
@@ -157,11 +158,14 @@ ORDER BY id;
 
 Para cumplir con  1NF , descomponemos la columna `description` en una nueva tabla llamada `descriptions`, donde cada empresa tendrá referencias claras a información detallada como:  
 
-| ID  | Ubicación   | Industria  | Empleados  | Tipo de empresa | Antigüedad  |
-|-----|------------|------------|------------|----------------|-------------|
-| 1   | New York   | Technology | 5000       | Private        | 20 years    |
-| 2   | San Diego  | Healthcare | 1200       | Public         | 15 years    |
 
+| id  | location   | industry                  | employees       | company_type | age       |
+|-----|-----------|---------------------------|----------------|--------------|-----------|
+| 1   | Mumbai    | Engineering & Construction | 51-200         | NULL         | 54 years  |
+| 2   | Pune      | Automobile                 | 5k-10k         | Public       | 79 years  |
+| 3   | Pune      | IT Services & Consulting   | 10k-50k        | Public       | 34 years  |
+| 4   | Ahmedabad | Power                      | 1k-5k          | Public       | 18 years  |
+| 5   | Noida     | NULL                       | NULL           | NULL         | NULL      |
 
 ```sql
 --Creacion de las tablas de descripcion
