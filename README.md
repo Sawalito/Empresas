@@ -177,6 +177,21 @@ WHERE ctid NOT IN (
 ## Normalización de datos hasta cuarta formal normal
 La normalización es un proceso esencial en el diseño de bases de datos, ya que reduce redundancias, mejora integridad y optimiza el rendimiento de consultas. En este proyecto, el conjunto de datos inicial no cumplía con Primera Forma Normal (1NF) debido a la presencia de atributos multivaluados y datos combinados en la columna ```description``.
 
+Nuestro objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF), y vamos a hacerlo en orden **FN1 → FN2 → 4NF** revisando las dependencias funcionales y multivaluadas.
+
+### Problema en la estructura de datos inicial
+La columna `description` presentaba múltiples valoresccombinados en una sola cadena de texto, lo que impide un acceso eficiente a información clave sobre cada empresa.
+
+Ejemplo de `description` antes de normalizar:
+`New York | Technology | 5000 employees | Private | 20 years old`  
+
+- Contiene varios atributos  en un solo campo.  
+- No está en 1NF , ya que no hay valores atómicos en cada celda.  
+- Difícil de consultar eficientemente (Ejemplo: ¿Cuántas empresas son privadas?).  
+
+Para solucionar esto, es necesario  dividir `description` en entidades separadas , asegurando una representación clara y normalizada.
+
+
 ### Asignación de Identificadores Únicos
 Para identificar cada registro de manera única, se agregó la columna `id` en `companies`, generando valores secuenciales con `ROW_NUMBER()` basado en `ctid`. Además, se creó una **secuencia automática** para gestionar futuras inserciones.
 

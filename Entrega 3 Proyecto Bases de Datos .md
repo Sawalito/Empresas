@@ -278,7 +278,7 @@ ALTER TABLE limpieza.companies DROP COLUMN description;
 
 
 ### Descomposición en FN1
-Las columnas `highly_rated_for` y `critically_rated_for` contienen  múltiples valores separados por comas , lo que indica una dependencia multivaluada. Para llevar a  FN1 y FN2 , descomponemos cada categoría en una entidad propia.  
+Las columnas `highly_rated_for` y `critically_rated_for` contienen  múltiples valores separados por comas y por '/', lo que indica una dependencia multivaluada. Para llevar a  FN1 y FN2 , descomponemos cada categoría en una entidad propia.  
 
 Antes de la normalización:   
 | ID | Empresa       | highly_rated_for       | critically_rated_for   |
