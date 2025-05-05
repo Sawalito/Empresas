@@ -335,7 +335,7 @@ WHERE c.highly_rated_for IS NULL;
 ```
 
 
-### *Descomposición en FN2
+### Descomposición en FN2
 Se aplica el mismo proceso para `critically_rated_for`.
 
 ```sql
