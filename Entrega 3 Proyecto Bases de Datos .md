@@ -98,16 +98,18 @@ WHERE ctid NOT IN (
 ```
 
 
+## Normalización de Datos
+La normalización garantiza que los datos sean estructurados correctamente, eliminando redundancias y mejorando la integridad. Se aplican reglas **FN1 → FN2 → 4NF** con base en **dependencias funcionales y multivaluadas**.
+
+---
 
 
-
+### Asignación de ID a la Tabla `companies`
+Primero, se añade una columna **`id`** a la tabla `companies`, asignando valores únicos a cada registro usando `ROW_NUMBER()` para garantizar una clave artificial.
+`ROW_NUMBER()` genera un índice incremental basado en `ctid`, permitiendo una identificación única.
+```sql
 --Ponerle un id a las nuevas columnas
-ALTER TABLE limpieza.companies
-ADD COLUMN id INTEGER;
-
-ALTER TABLE limpieza.companies DROP COLUMN id;
-
-ALTER TABLE limpieza.companies ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE limpieza.companies ADD COLUMN id INTEGER;
 
 UPDATE limpieza.companies
 SET id = sub.row_num
@@ -116,9 +118,15 @@ FROM (
   FROM limpieza.companies
 ) sub
 WHERE limpieza.companies.ctid = sub.ctid;
+```
 
+---
+
+### Creación de una Secuencia para ID
+Se utiliza una **secuencia (`limpieza_companies_id_seq`)** para mantener la generación automática de identificadores en futuras inserciones.
+
+```sql
 DROP SEQUENCE IF EXISTS limpieza_companies_id_seq;
-
 CREATE SEQUENCE limpieza_companies_id_seq;
 
 SELECT setval('limpieza_companies_id_seq', (SELECT MAX(id) FROM limpieza.companies));
@@ -126,18 +134,17 @@ SELECT setval('limpieza_companies_id_seq', (SELECT MAX(id) FROM limpieza.compani
 ALTER TABLE limpieza.companies
 ALTER COLUMN id SET DEFAULT nextval('limpieza_companies_id_seq');
 
-
-ALTER TABLE limpieza.companies
-ALTER COLUMN id SET DEFAULT nextval('limpieza_companies_id_seq');
-
-
 SELECT * FROM limpieza.companies
 ORDER BY id;
+```
 
+
+### Creación de una tabla `descriptions` para separar lo que contiene la columna description
+Se separa la información de `description` en una tabla independiente para evitar **redundancias** y mejorar la estructura normalizada. `description` es un atributo compuesto, y separarlo permite una **representación más limpia en 4NF**.
+```sql
 --Creacion de las tablas de descripcion
 
 DROP TABLE IF EXISTS limpieza.descriptions;
-
 CREATE TABLE limpieza.descriptions (
     id SERIAL PRIMARY KEY,
     description TEXT UNIQUE,
@@ -147,7 +154,17 @@ CREATE TABLE limpieza.descriptions (
     company_type TEXT,
     age TEXT
 );
+```
 
+Extraer Atributos de `description`
+Dado que `description` contiene múltiples valores en **formato texto**, se usa `string_to_array()` y expresiones regulares para extraer:
+- **Ubicación (`location`)**
+- **Industria (`industry`)**
+- **Número de empleados (`employees`)**
+- **Tipo de empresa (`company_type`)**
+- **Años de operación (`age`)**
+
+```sql
 INSERT INTO limpieza.descriptions (
     description,
     location,
@@ -195,166 +212,9 @@ FROM (
     FROM limpieza.companies
     WHERE description IS NOT NULL
 ) d;
+```
 
-UPDATE limpieza.descriptions
-SET location = TRIM(
-    SPLIT_PART(description, '|', array_length(string_to_array(description, '|'), 1))
-)
-WHERE description IS NOT NULL;
+Esto permite almacenar cada atributo en su **propia columna**, facilitando análisis.
 
---Comprobacion
-SELECT * FROM  limpieza.descriptions ORDER BY id;
-
-SELECT * FROM limpieza.descriptions;
-
-SELECT COUNT(*) FROM limpieza.descriptions;
-
-
-SELECT COUNT(DISTINCT description) FROM limpieza.companies;
--- Agregar columna de descripcion
-ALTER TABLE limpieza.companies
-ADD COLUMN descripcion_id INTEGER;
-
-UPDATE limpieza.companies c
-SET descripcion_id = d.id
-FROM limpieza.descriptions d
-WHERE c.description = d.description;
-
-ALTER TABLE limpieza.descriptions DROP COLUMN description;
-SELECT * FROM limpieza.descriptions ORDER BY id;
-
-SELECT * FROM limpieza.companies;
-ALTER TABLE limpieza.companies DROP COLUMN description;
-
---LLevar a FN1
-DROP TABLE IF EXISTS limpieza.companies_fn1;
-
-CREATE TABLE limpieza.companies_fn1 AS
-
--- Filas con valores individuales de highly_rated_for
-SELECT
-    c.id,
-    c.company_name,
-    c.average_rating,
-    TRIM(value) AS rating_value,
-    c.critically_rated_for,
-    c.total_reviews,
-    c.available_jobs,
-    c.total_benefits,
-    c.descripcion_id
-FROM limpieza.companies c,
-     LATERAL regexp_split_to_table(c.highly_rated_for, '\s*,\s*') AS value
-
-UNION ALL
-
--- Fila única cuando highly_rated_for es NULL
-SELECT
-    c.id,
-    c.company_name,
-    c.average_rating,
-    NULL AS rating_value,
-    c.critically_rated_for,
-    c.total_reviews,
-    c.available_jobs,
-    c.total_benefits,
-    c.descripcion_id
-FROM limpieza.companies c
-WHERE c.highly_rated_for IS NULL;
-
-
-CREATE TABLE limpieza.companies_fn2 AS
-
--- Descomposición de critically_rated_for
-SELECT
-    c.id,
-    c.company_name,
-    c.average_rating,
-    c.rating_value AS highly_rated_for_value,
-    TRIM(value) AS critically_rated_for_value,
-    c.total_reviews,
-    c.available_jobs,
-    c.total_benefits,
-    c.descripcion_id
-FROM limpieza.companies_fn1 c,
-     LATERAL regexp_split_to_table(c.critically_rated_for, '\s*,\s*') AS value
-
-UNION ALL
-
--- Fila con NULL si critically_rated_for lo es
-SELECT
-    c.id,
-    c.company_name,
-    c.average_rating,
-    c.rating_value AS highly_rated_for_value,
-    NULL AS critically_rated_for_value,
-    c.total_reviews,
-    c.available_jobs,
-    c.total_benefits,
-    c.descripcion_id
-FROM limpieza.companies_fn1 c
-WHERE c.critically_rated_for IS NULL;
-
-
-SELECT * FROM limpieza.companies_fn2 WHERE id = 66;
-
-SELECT * FROM limpieza.companies_fn2 ORDER BY id;
-
-SELECT * FROM limpieza.companies_fn1 ORDER BY id;
-
-SELECT * FROM limpieza.companies WHERE id = 66;
-
---Teorema de Heath 4FN
-
-DROP TABLE limpieza.companies_base;
-
-CREATE TABLE limpieza.companies_base AS
-SELECT DISTINCT
-    id,
-    company_name,
-    average_rating,
-    total_reviews,
-    available_jobs,
-    total_benefits
-FROM limpieza.companies_fn2;
-SELECT * FROM limpieza.companies_base;
-
-DROP TABLE limpieza.companies_descripciones;
-CREATE TABLE limpieza.companies_descripciones AS
-SELECT DISTINCT
-    id,
-    descripcion_id
-FROM limpieza.companies_fn2
-WHERE descripcion_id IS NOT NULL;
-
-SELECT * FROM limpieza.companies_descripciones ORDER BY id;
-
-CREATE TABLE limpieza.companies_highly_rated AS
-SELECT DISTINCT
-    id,
-    highly_rated_for_value AS rating_value
-FROM limpieza.companies_fn2
-WHERE highly_rated_for_value IS NOT NULL;
-
-SELECT * FROM limpieza.companies_highly_rated ORDER BY id;
-
-
-CREATE TABLE limpieza.companies_critically_rated AS
-SELECT DISTINCT
-    id,
-    critically_rated_for_value AS rating_value
-FROM limpieza.companies_fn2
-WHERE critically_rated_for_value IS NOT NULL;
-
-SELECT * FROM limpieza.companies_critically_rated ORDER BY id;
-
-
---Tablas resultantes para el proyecto:
-
---companies_base
---companies_critically_rated
---companies_descripciones
---companies_highly_rated
---descriptions
-
-
+---
 
