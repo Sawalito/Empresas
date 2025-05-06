@@ -92,7 +92,6 @@ WHERE ctid NOT IN (
 
 
 ## Normalización de Datos
-La normalización es un proceso esencial en el diseño de bases de datos, ya que reduce redundancias, mejora integridad y optimiza el rendimiento de consultas. En este proyecto, el conjunto de datos inicial no cumplía con Primera Forma Normal (1NF) debido a la presencia de atributos multivaluados y datos combinados en la columna ```description``.
 
 El objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF).
 Un problema inicial es que la tabla no contiene un identificador.
@@ -159,7 +158,19 @@ Dado que los campos `highly_rated_for` y `critically_rated_for` contienen múlti
 
 ### Problema en la estructura de datos inicial
 
-La columna `description` presenta múltiples valores combinados en una sola cadena de texto, lo que impide un acceso eficiente a información clave sobre cada empresa.
+El campo `description` en la tabla original contiene una cadena compuesta de varios atributos como ubicación, industria, número de empleados, tipo de empresa y años de operación. Para cumplir 1NF, se extrajo esta información a una nueva relvar.
+
+**Encabezado de la relvar:**
+
+```
+Descriptions = { descripcion_id, location, industry, employees, company_type, age }
+```
+
+**Dependencia Funcional:**
+
+```
+{ descripcion_id } → { location, industry, employees, company_type, age }
+```
 
 Ejemplo de `description` antes de normalizar:
 
@@ -170,11 +181,6 @@ Ejemplo de `description` antes de normalizar:
 | IT Services & Consulting \| 10k-50k Employees \| Public \| 34 years old \| Pune +33 more |  
 | Power \| 1k-5k Employees \| Public \| 18 years old \| Ahmedabad +79 more |  
 | Noida +69 more |  
-
-
-- Contiene varios atributos  en un solo campo.  
-- No está en 1NF , ya que no hay valores atómicos en cada celda.  
-- Difícil de consultar eficientemente (Ejemplo: ¿Cuántas empresas son privadas?).  
 
 Para solucionar esto, es necesario  dividir `description` en entidades separadas , asegurando una representación clara y normalizada.
 
@@ -307,23 +313,24 @@ ALTER TABLE limpieza.companies DROP COLUMN description;
 ---
 
 
-### Descomposición en FN1
-Las columnas `highly_rated_for` y `critically_rated_for` contienen  múltiples valores separados por comas y por '/', lo que indica una dependencia multivaluada. Para llevar a  FN1 y FN2 , descomponemos cada categoría en una entidad propia.  
+### Descomposición de Atributos Multivaluados
+Debido a que los atributos `highly_rated_for` y `critically_rated_for` son multivaluados, se realizó una descomposición en relaciones independientes, eliminando la redundancia y dejando cada valor en una sola celda (cumpliendo 1NF y avanzando hacia 4NF).
 
-Antes de la normalización:   
-| ID | Empresa       | highly_rated_for       | critically_rated_for   |
-|----|--------------|------------------------|------------------------|
-| 1  | Amazon       | Salary, Benefits       | Work-life balance     |
+**Relvar Companies_Highly_Rated**
 
-Después de FN1 y FN2:   
-| ID | Empresa       | highly_rated_for       |
-|----|--------------|------------------------|
-| 1  | Amazon       | Salary                 |
-| 1  | Amazon       | Benefits               |
+```
+Companies_Highly_Rated = { id, rating_value }
 
-| ID | Empresa       | critically_rated_for   |
-|----|--------------|------------------------|
-| 1  | Amazon       | Work-life balance      |
+{id } → { rating_value }
+```
+
+**Relvar Companies_Critically_Rated**
+
+```
+Companies_Critically_Rated = { id, rating_value }
+
+{id } → { rating_value }
+```
 
 
 ```sql
