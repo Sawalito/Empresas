@@ -33,8 +33,6 @@ average_rating | count_companies
 
 #### Análisis de la varianza en las calificaciones de las empresas con promedio perfecto
 
-En lugar de simplemente listar las empresas con una calificación promedio de 5, es más útil analizar la varianza en las calificaciones individuales de estas empresas. Esto puede revelar si las calificaciones perfectas son consistentes o si están influenciadas por valores atípicos.
-
 ```sql
 SELECT company_name,
     VARIANCE(rating) AS rating_variance,

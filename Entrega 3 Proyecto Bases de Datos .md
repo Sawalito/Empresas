@@ -101,7 +101,8 @@ Primero, se añade una columna **`id`** a la tabla `companies`, asignando valore
 `ROW_NUMBER()` genera un índice incremental basado en `ctid`, permitiendo una identificación única.
 ```sql
 --Ponerle un id a las nuevas columnas
-ALTER TABLE limpieza.companies ADD COLUMN id INTEGER;
+ALTER TABLE limpieza.companies 
+ADD COLUMN id INTEGER;
 
 UPDATE limpieza.companies
 SET id = sub.row_num
@@ -110,6 +111,12 @@ FROM (
   FROM limpieza.companies
 ) sub
 WHERE limpieza.companies.ctid = sub.ctid;
+
+ALTER TABLE limpieza.companies
+ALTER COLUMN id SET NOT NULL;
+
+ALTER TABLE limpieza.companies
+ADD CONSTRAINT pk_companies PRIMARY KEY (id);
 ```
 ---
 
@@ -204,7 +211,7 @@ Para cumplir con  1NF , descomponemos la columna `description` en una nueva tabl
 
 DROP TABLE IF EXISTS limpieza.descriptions;
 CREATE TABLE limpieza.descriptions (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     description TEXT UNIQUE,
     location TEXT,
     industry TEXT,
@@ -296,18 +303,22 @@ En la tabla companies cambiar `description` por 'descripcion_id'.
 ```sql
 -- Agregar columna de descripcion
 ALTER TABLE limpieza.companies
-ADD COLUMN descripcion_id INTEGER;
+ADD COLUMN descripcion_id BIGINT REFERENCES limpieza.descriptions(id);
 
 UPDATE limpieza.companies c
 SET descripcion_id = d.id
 FROM limpieza.descriptions d
 WHERE c.description = d.description;
 
-ALTER TABLE limpieza.descriptions DROP COLUMN description;
+ALTER TABLE limpieza.descriptions 
+DROP COLUMN dsescription;
+
 SELECT * FROM limpieza.descriptions ORDER BY id;
 
 SELECT * FROM limpieza.companies;
-ALTER TABLE limpieza.companies DROP COLUMN description;
+
+ALTER TABLE limpieza.companies 
+DROP COLUMN description;
 ```
 ---
 
@@ -330,7 +341,6 @@ Companies_Critically_Rated = { id, rating_value }
 
 
 ```sql
-
 --LLevar a FN1
 DROP TABLE IF EXISTS limpieza.companies_fn1;
 
