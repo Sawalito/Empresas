@@ -88,144 +88,217 @@ SET CLIENT_ENCODING TO 'UTF8';
 
 
 
+### Limpieza y Conversión de Datos
 
-## Limpieza y conversión de datos
+Para garantizar la integridad y consistencia de los datos, se realizaron los siguientes pasos de limpieza y conversión en el esquema `limpieza`:
 
-### Conversión de valores con sufijo "k" a números enteros, y "--" a NULL
+#### 1. Creación del Esquema y Copia de Datos
+Se creó un esquema `limpieza` para separar los datos originales de los procesados:
 ```sql
-UPDATE companies SET total_reviews = (
+CREATE SCHEMA limpieza;
+
+CREATE TABLE IF NOT EXISTS limpieza.companies AS
+  SELECT * FROM public.companies;
+```
+
+#### 2. Conversión de Valores con Sufijo "k" y "--" a Números Enteros o NULL
+Se procesaron las columnas `total_reviews`, `average_salary`, `total_interviews`, `available_jobs` y `total_benefits` para convertir valores con sufijo "k" a números enteros y reemplazar valores "--" con `NULL`:
+```sql
+UPDATE limpieza.companies SET total_reviews = (
   CASE
-    WHEN total_reviews ILIKE '%k' THEN
-      (CAST(REPLACE(LOWER(total_reviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
-    WHEN total_reviews = '--' OR total_reviews IS NULL THEN NULL
-    ELSE total_reviews
+  WHEN total_reviews ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(total_reviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN total_reviews = '--' OR total_reviews IS NULL THEN NULL
+  ELSE total_reviews
   END
 );
 
-UPDATE companies SET average_salary = (
+UPDATE limpieza.companies SET average_salary = (
   CASE
-    WHEN average_salary ILIKE '%k' THEN
-      (CAST(REPLACE(LOWER(average_salary), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
-    WHEN average_salary = '--' OR average_salary IS NULL THEN NULL
-    ELSE average_salary
+  WHEN average_salary ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(average_salary), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN average_salary = '--' OR average_salary IS NULL THEN NULL
+  ELSE average_salary
+  END
+);
+
+UPDATE limpieza.companies SET total_interviews = (
+  CASE
+  WHEN total_interviews ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(total_interviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN total_interviews = '--' OR total_interviews IS NULL THEN NULL
+  ELSE total_interviews
+  END
+);
+
+UPDATE limpieza.companies SET available_jobs = (
+  CASE
+  WHEN available_jobs ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(available_jobs), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN available_jobs = '--' OR available_jobs IS NULL THEN NULL
+  ELSE available_jobs
+  END
+);
+
+UPDATE limpieza.companies SET total_benefits = (
+  CASE
+  WHEN total_benefits ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(total_benefits), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN total_benefits = '--' OR total_benefits IS NULL THEN NULL
+  ELSE total_benefits
   END
 );
 ```
-(Se repiten los mismos pasos para `total_interviews`, `available_jobs` y `total_benefits`)
+
+#### 3. Modificación del Tipo de Datos
+Se ajustaron los tipos de datos de las columnas para reflejar los cambios realizados:
 ```sql
-UPDATE companies SET total_interviews = (
-  CASE
-    WHEN total_interviews ILIKE '%k' THEN
-      (CAST(REPLACE(LOWER(total_interviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
-    WHEN total_interviews = '--' OR total_interviews IS NULL THEN NULL
-    ELSE total_interviews
-  END
-);
-UPDATE companies SET available_jobs = (
-  CASE
-    WHEN available_jobs ILIKE '%k' THEN
-      (CAST(REPLACE(LOWER(available_jobs), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
-    WHEN available_jobs = '--' OR available_jobs IS NULL THEN NULL
-    ELSE available_jobs
-  END
-);
-UPDATE companies SET total_benefits = (
-  CASE
-    WHEN total_benefits ILIKE '%k' THEN
-      (CAST(REPLACE(LOWER(total_benefits), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
-    WHEN total_benefits = '--' OR total_benefits IS NULL THEN NULL
-    ELSE total_benefits
-  END
-);
+ALTER TABLE limpieza.companies ALTER COLUMN total_reviews TYPE BIGINT USING total_reviews::BIGINT;
+ALTER TABLE limpieza.companies ALTER COLUMN average_salary TYPE BIGINT USING average_salary::BIGINT;
+ALTER TABLE limpieza.companies ALTER COLUMN total_interviews TYPE BIGINT USING total_interviews::BIGINT;
+ALTER TABLE limpieza.companies ALTER COLUMN available_jobs TYPE BIGINT USING available_jobs::BIGINT;
+ALTER TABLE limpieza.companies ALTER COLUMN total_benefits TYPE BIGINT USING total_benefits::BIGINT;
+
+ALTER TABLE limpieza.companies ALTER COLUMN company_name TYPE VARCHAR(255);
+ALTER TABLE limpieza.companies ALTER COLUMN description TYPE VARCHAR(255);
+ALTER TABLE limpieza.companies ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
+ALTER TABLE limpieza.companies ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 ```
 
-
-
-### Modificación del tipo de datos
+#### 4. Eliminación de Duplicados
+Se eliminaron registros duplicados basándose en combinaciones de columnas clave:
 ```sql
-ALTER TABLE companies ALTER COLUMN total_reviews TYPE BIGINT USING total_reviews::BIGINT;
-ALTER TABLE companies ALTER COLUMN average_salary TYPE BIGINT USING average_salary::BIGINT;
-ALTER TABLE companies ALTER COLUMN total_interviews TYPE BIGINT USING total_interviews::BIGINT;
-ALTER TABLE companies ALTER COLUMN available_jobs TYPE BIGINT USING available_jobs::BIGINT;
-ALTER TABLE companies ALTER COLUMN total_benefits TYPE BIGINT USING total_benefits::BIGINT;
-
-ALTER TABLE companies ALTER COLUMN company_name TYPE VARCHAR(255);
-ALTER TABLE companies ALTER COLUMN description TYPE VARCHAR(255);
-ALTER TABLE companies ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
-ALTER TABLE companies ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
-```
-
-### Detección y eliminación de duplicados
-```sql
-DELETE FROM companies
+DELETE FROM limpieza.companies
 WHERE ctid NOT IN (
   SELECT MIN(ctid)
-  FROM companies
+  FROM limpieza.companies
   GROUP BY company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits
 );
 
-DELETE FROM companies
+DELETE FROM limpieza.companies
 WHERE ctid NOT IN (  
   SELECT MIN(ctid)
-  FROM companies
+  FROM limpieza.companies
   GROUP BY company_name, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, total_benefits
 );
 ```
 
+Con estos pasos, los datos en el esquema `limpieza` están listos para su análisis y normalización.
+
+
+
 
 ## Normalización de datos hasta cuarta formal normal
-La normalización es un proceso esencial en el diseño de bases de datos, ya que reduce redundancias, mejora integridad y optimiza el rendimiento de consultas. En este proyecto, el conjunto de datos inicial no cumplía con Primera Forma Normal (1NF) debido a la presencia de atributos multivaluados y datos combinados en la columna ```description``.
 
 El objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF).
+Un problema inicial es que la tabla no contiene un identificador.
 
-### Problema en la estructura de datos inicial
-La columna `description` presentaba múltiples valoresccombinados en una sola cadena de texto, lo que impide un acceso eficiente a información clave sobre cada empresa.
-
-Ejemplo de `description` antes de normalizar:
-`New York | Technology | 5000 employees | Private | 20 years old`  
-
-- Contiene varios atributos  en un solo campo.  
-- No está en 1NF , ya que no hay valores atómicos en cada celda.  
-- Difícil de consultar eficientemente (Ejemplo: ¿Cuántas empresas son privadas?).  
-
-Para solucionar esto, es necesario  dividir `description` en entidades separadas , asegurando una representación clara y normalizada.
-
-
-### Asignación de Identificadores Únicos
-Para identificar cada registro de manera única, se agregó la columna `id` en `companies`, generando valores secuenciales con `ROW_NUMBER()` basado en `ctid`. Además, se creó una **secuencia automática** para gestionar futuras inserciones.
+### Asignación de ID a la Tabla `companies`
+Primero, se añade una columna **`id`** a la tabla `companies`, asignando valores únicos a cada registro usando `ROW_NUMBER()` para garantizar una clave artificial.
+`ROW_NUMBER()` genera un índice incremental basado en `ctid`, permitiendo una identificación única.
 
 ```sql
-ALTER TABLE companies ADD COLUMN id INTEGER;
+--Ponerle un id a las nuevas columnas
+ALTER TABLE limpieza.companies ADD COLUMN id INTEGER;
 
-UPDATE companies
+UPDATE limpieza.companies
 SET id = sub.row_num
 FROM (
   SELECT ctid, ROW_NUMBER() OVER (ORDER BY ctid) AS row_num
-  FROM companies
+  FROM limpieza.companies
 ) sub
-WHERE companies.ctid = sub.ctid;
-
-DROP SEQUENCE IF EXISTS companies_id_seq;
-CREATE SEQUENCE companies_id_seq;
-
-SELECT setval('companies_id_seq', (SELECT MAX(id) FROM companies));
-
-ALTER TABLE companies
-ALTER COLUMN id SET DEFAULT nextval('companies_id_seq');
+WHERE limpieza.companies.ctid = sub.ctid;
 ```
+---
+### Creación de una Secuencia para ID
+Se utiliza una **secuencia (`limpieza_companies_id_seq`)** para mantener la generación automática de identificadores en futuras inserciones.
+
+```sql
+DROP SEQUENCE IF EXISTS limpieza_companies_id_seq;
+CREATE SEQUENCE limpieza_companies_id_seq;
+
+SELECT setval('limpieza_companies_id_seq', (SELECT MAX(id) FROM limpieza.companies));
+
+ALTER TABLE limpieza.companies
+ALTER COLUMN id SET DEFAULT nextval('limpieza_companies_id_seq');
+
+SELECT * FROM limpieza.companies
+ORDER BY id;
+```
+
+### Relvar Original (Tabla Companies)
+Ahora podemos definir la relvar original (antes de cualquier descomposición) con el siguiente encabezado:
+
+```
+Companies = { id, company_name, average_rating, total_reviews, average_salary, total_interviews, available_jobs, total_benefits, description, highly_rated_for, critically_rated_for }
+```
+
+**Dependencia Funcional (DF):**
+
+El identificador único `id` determina de forma única el resto de los atributos:
+
+```
+{id} → { company_name, average_rating, total_reviews, average_salary, total_interviews, available_jobs, total_benefits, description, highly_rated_for, critically_rated_for }
+```
+
+**Dependencias Multivaluadas (DMV) No Triviales:**
+
+Dado que los campos `highly_rated_for` y `critically_rated_for` contienen múltiples valores en una misma celda, se tienen las siguientes dependencias multivaluadas:
+
+```
+{id} ->> { highly_rated_for }
+{id} ->> { critically_rated_for }
+```
+
+
+### Problema en la estructura de datos inicial
+
+El campo `description` en la tabla original contiene una cadena compuesta de varios atributos como ubicación, industria, número de empleados, tipo de empresa y años de operación. Para cumplir 1NF, se extrajo esta información a una nueva relvar.
+
+**Encabezado de la relvar:**
+
+```
+Descriptions = { descripcion_id, location, industry, employees, company_type, age }
+```
+
+**Dependencia Funcional:**
+
+```
+{ descripcion_id } → { location, industry, employees, company_type, age }
+```
+
+Ejemplo de `description` antes de normalizar:
+
+| description |  
+|-----------------------------------------|  
+| Engineering & Construction \| 51-200 Employees \| 54 years old \| Mumbai +12 more |  
+| Automobile \| 5k-10k Employees \| Public \| 79 years old \| Pune +250 more |  
+| IT Services & Consulting \| 10k-50k Employees \| Public \| 34 years old \| Pune +33 more |  
+| Power \| 1k-5k Employees \| Public \| 18 years old \| Ahmedabad +79 more |  
+| Noida +69 more |  
+
+Para solucionar esto, es necesario  dividir `description` en entidades separadas , asegurando una representación clara y normalizada.
 
 ---
 
-### Separación de Información de `description`
-La columna `description` contenía múltiples atributos combinados en texto. Para una representación más clara en **4NF**, se creó la tabla `descriptions`, separando información relevante como:
-- **Ubicación**
-- **Industria**
-- **Número de empleados**
-- **Tipo de empresa (Privada/Pública)**
-- **Antigüedad**
+### Creación de una tabla `descriptions` para separar lo que contiene la columna description
+
+Para cumplir con  1NF , descomponemos la columna `description` en una nueva tabla llamada `descriptions`, donde cada empresa tendrá referencias claras a información detallada como:  
+
+
+| id  | location   | industry                  | employees       | company_type | age       |
+|-----|-----------|---------------------------|----------------|--------------|-----------|
+| 1   | Mumbai    | Engineering & Construction | 51-200         | NULL         | 54 years  |
+| 2   | Pune      | Automobile                 | 5k-10k         | Public       | 79 years  |
+| 3   | Pune      | IT Services & Consulting   | 10k-50k        | Public       | 34 years  |
+| 4   | Ahmedabad | Power                      | 1k-5k          | Public       | 18 years  |
+| 5   | Noida     | NULL                       | NULL           | NULL         | NULL      |
 
 ```sql
-CREATE TABLE descriptions (
+--Creacion de las tablas de descripcion
+
+DROP TABLE IF EXISTS limpieza.descriptions;
+CREATE TABLE limpieza.descriptions (
     id SERIAL PRIMARY KEY,
     description TEXT UNIQUE,
     location TEXT,
@@ -234,43 +307,130 @@ CREATE TABLE descriptions (
     company_type TEXT,
     age TEXT
 );
+```
 
-INSERT INTO descriptions (
-    description, location, industry, employees, company_type, age
-)
-SELECT DISTINCT
+Extraer Atributos de `description`
+Dado que `description` contiene múltiples valores en **formato texto**, se usa `string_to_array()` y expresiones regulares para extraer:
+- **Ubicación (`location`)**
+- **Industria (`industry`)**
+- **Número de empleados (`employees`)**
+- **Tipo de empresa (`company_type`)**
+- **Años de operación (`age`)**
+
+```sql
+INSERT INTO limpieza.descriptions (
     description,
+    location,
+    industry,
+    employees,
+    company_type,
+    age
+)
+SELECT
+    d.description,
+
+    -- Detectar ubicación como "City +N more"
     CASE
-        WHEN description LIKE '%+% more%' THEN NULL
+        WHEN d.description ~* '^[A-Za-z ]+\s+\+\d+\s+more$' THEN d.description
+        WHEN d.description LIKE '%+% more%' THEN NULL
         ELSE NULL
     END AS location,
-    CASE WHEN description LIKE '%|%' THEN TRIM(SPLIT_PART(description, '|', 1)) ELSE NULL END AS industry,
-    (SELECT val FROM unnest(string_to_array(description, '|')) val WHERE val ILIKE '%employees%' LIMIT 1) AS employees,
-    (SELECT val FROM unnest(string_to_array(description, '|')) val WHERE val ILIKE 'public%' OR val ILIKE 'private%' LIMIT 1) AS company_type,
-    (SELECT val FROM unnest(string_to_array(description, '|')) val WHERE val ILIKE '%years old%' LIMIT 1) AS age
-FROM companies WHERE description IS NOT NULL;
+
+    -- Extraer industry
+    CASE
+        WHEN d.description LIKE '%|%' THEN TRIM(SPLIT_PART(d.description, '|', 1))
+        ELSE NULL
+    END AS industry,
+
+    -- Employees
+    (
+        SELECT val FROM unnest(string_to_array(d.description, '|')) val
+        WHERE val ILIKE '%employees%' LIMIT 1
+    ) AS employees,
+
+    -- Company type
+    (
+        SELECT val FROM unnest(string_to_array(d.description, '|')) val
+        WHERE val ILIKE 'public%' OR val ILIKE 'private%' LIMIT 1
+    ) AS company_type,
+
+    -- Age
+    (
+        SELECT val FROM unnest(string_to_array(d.description, '|')) val
+        WHERE val ILIKE '%years old%' LIMIT 1
+    ) AS age
+
+FROM (
+    SELECT DISTINCT description
+    FROM limpieza.companies
+    WHERE description IS NOT NULL
+) d;
 ```
 
-Se estableció la relación `descripcion_id` en `companies` y se eliminó la columna redundante `description`.
+Esto permite almacenar cada atributo en su **propia columna**, facilitando análisis.
 
 ```sql
-ALTER TABLE companies ADD COLUMN descripcion_id INTEGER;
+-- Actualiza la columna 'location' en la tabla 'descriptions'.
+-- Extrae la última parte del atributo 'description' (separado por '|') como ubicación.
+UPDATE limpieza.descriptions
+SET location = TRIM(
+    SPLIT_PART(description, '|', array_length(string_to_array(description, '|'), 1))
+)
+WHERE description IS NOT NULL;
 
-UPDATE companies c
+--Comprobacion
+SELECT * FROM  limpieza.descriptions ORDER BY id;
+
+SELECT * FROM limpieza.descriptions;
+
+SELECT COUNT(*) FROM limpieza.descriptions;
+
+SELECT COUNT(DISTINCT description) FROM limpieza.companies;
+```
+En la tabla companies cambiar `description` por 'descripcion_id'.
+```sql
+-- Agregar columna de descripcion
+ALTER TABLE limpieza.companies
+ADD COLUMN descripcion_id INTEGER;
+
+UPDATE limpieza.companies c
 SET descripcion_id = d.id
-FROM descriptions d
+FROM limpieza.descriptions d
 WHERE c.description = d.description;
 
-ALTER TABLE companies DROP COLUMN description;
-ALTER TABLE descriptions DROP COLUMN description;
-```
+ALTER TABLE limpieza.descriptions DROP COLUMN description;
+SELECT * FROM limpieza.descriptions ORDER BY id;
 
+SELECT * FROM limpieza.companies;
+ALTER TABLE limpieza.companies DROP COLUMN description;
+```
 ---
 
-`highly_rated_for` es un atributo multivaluado que se descompone en filas individuales.
+### Descomposición de Atributos Multivaluados
+Debido a que los atributos `highly_rated_for` y `critically_rated_for` son multivaluados, se realizó una descomposición en relaciones independientes, eliminando la redundancia y dejando cada valor en una sola celda (cumpliendo 1NF y avanzando hacia 4NF).
+
+**Relvar Companies_Highly_Rated**
+```
+Companies_Highly_Rated = { id, rating_value }
+
+{id } → { rating_value }
+```
+
+**Relvar Companies_Critically_Rated**
+```
+Companies_Critically_Rated = { id, rating_value }
+
+{id } → { rating_value }
+```
+
 
 ```sql
-CREATE TABLE companies_fn1 AS
+
+--LLevar a FN1
+DROP TABLE IF EXISTS limpieza.companies_fn1;
+
+CREATE TABLE limpieza.companies_fn1 AS
+-- Filas con valores individuales de highly_rated_for
 SELECT
     c.id,
     c.company_name,
@@ -278,23 +438,39 @@ SELECT
     TRIM(value) AS rating_value,
     c.critically_rated_for,
     c.total_reviews,
+    c.average_salary,
+    c.total_interviews,
     c.available_jobs,
     c.total_benefits,
     c.descripcion_id
-FROM companies c,
+FROM limpieza.companies c,
      LATERAL regexp_split_to_table(c.highly_rated_for, '\s*,\s*') AS value
 
 UNION ALL
 
+-- Fila única cuando highly_rated_for es NULL
 SELECT
-    c.id, c.company_name, c.average_rating, NULL AS rating_value,
-    c.critically_rated_for, c.total_reviews, c.available_jobs, c.total_benefits, c.descripcion_id
-FROM companies c WHERE c.highly_rated_for IS NULL;
+    c.id,
+    c.company_name,
+    c.average_rating,
+    NULL AS rating_value,
+    c.critically_rated_for,
+    c.total_reviews,
+    c.average_salary,
+    c.total_interviews,
+    c.available_jobs,
+    c.total_benefits,
+    c.descripcion_id
+FROM limpieza.companies c
+WHERE c.highly_rated_for IS NULL;
 ```
-Se descompone `critically_rated_for` aplicando el mismo proceso.
+
+Se aplica el mismo proceso para `critically_rated_for`.
 
 ```sql
-CREATE TABLE companies_fn2 AS
+DROP TABLE IF EXISTS limpieza.companies_fn2;
+CREATE TABLE limpieza.companies_fn2 AS
+-- Descomposición de critically_rated_for
 SELECT
     c.id,
     c.company_name,
@@ -302,111 +478,121 @@ SELECT
     c.rating_value AS highly_rated_for_value,
     TRIM(value) AS critically_rated_for_value,
     c.total_reviews,
+    c.average_salary,
+    c.total_interviews,
     c.available_jobs,
     c.total_benefits,
     c.descripcion_id
-FROM companies_fn1 c,
+FROM limpieza.companies_fn1 c,
      LATERAL regexp_split_to_table(c.critically_rated_for, '\s*,\s*') AS value
-
 UNION ALL
-
+-- Fila con NULL si critically_rated_for lo es
 SELECT
-    c.id, c.company_name, c.average_rating, c.rating_value AS highly_rated_for_value,
+    c.id,
+    c.company_name,
+    c.average_rating,
+    c.rating_value AS highly_rated_for_value,
     NULL AS critically_rated_for_value,
-    c.total_reviews, c.available_jobs, c.total_benefits, c.descripcion_id
-FROM companies_fn1 c WHERE c.critically_rated_for IS NULL;
+    c.total_reviews,
+    c.average_salary,
+    c.total_interviews,
+    c.available_jobs,
+    c.total_benefits,
+    c.descripcion_id
+FROM limpieza.companies_fn1 c
+WHERE c.critically_rated_for IS NULL;
+```
+```sql
+SELECT * FROM limpieza.companies_fn2 WHERE id = 66;
+
+SELECT * FROM limpieza.companies_fn2 ORDER BY id;
+
+SELECT * FROM limpieza.companies_fn1 ORDER BY id;
+
+SELECT * FROM limpieza.companies WHERE id = 66;
 ```
 
-### Cuarta Forma Normal (4NF) – Teorema de Heath
-Las dependencias multivaluadas se eliminan separando los datos en tablas independientes:
+
+---
+
+### Aplicación del Teorema de Heath (4NF)
+Se descompone la tabla final en múltiples entidades.
+La  última fase  de normalización consiste en  eliminar dependencias multivaluadas  en la base de datos utilizando el  Teorema de Heath . Esto nos permite dividir correctamente la información y generar relaciones claras sin redundancias.  
+
+Para evitar la repetición de información que se ha fragmentado en las otras relaciones, se genera una relación que almacena únicamente los atributos que dependen funcionalmente de la clave principal sin la información descompuesta.
+
+**Relvar Companies_Base (Información Esencial de Empresa):**
+```
+Companies_Base = { id, company_name, average_rating, total_reviews, average_salary, total_interviews, available_jobs, total_benefits }
+
+descripcion_id, companies_highly_rated_id, companies_critically_rated_id }
+
+{id} → { company_name, average_rating, total_reviews,  average_salary, total_interviews, available_jobs, total_benefits}
+
+ descripcion_id, companies_highly_rated_id, companies_critically_rated_id }
+```
+
+
+Tablas finales después de 4NF:   
+- `companies_base`: Información esencial de cada empresa.  
+- `descriptions`: Atributos detallados por empresa.  
+- `companies_highly_rated`: Categorías positivas en empresas.  
+- `companies_critically_rated`: Categorías negativas en empresas.  
+- `companies_descripciones`: Relación entre empresas y su descripción.  
 
 ```sql
-CREATE TABLE companies_base AS
-SELECT DISTINCT id, company_name, average_rating, total_reviews, available_jobs, total_benefits
-FROM companies_fn2;
+--Teorema de Heath 4FN
+DROP TABLE IF EXISTS limpieza.companies_base;
+CREATE TABLE limpieza.companies_base AS
+SELECT DISTINCT
+    id,
+    company_name,
+    average_rating,
+    total_reviews,
+    average_salary,
+    total_interviews,
+    available_jobs,
+    total_benefits
+FROM limpieza.companies_fn2;
+SELECT * FROM limpieza.companies_base;
 
-CREATE TABLE companies_descripciones AS
-SELECT DISTINCT id, descripcion_id FROM companies_fn2 WHERE descripcion_id IS NOT NULL;
 
-CREATE TABLE companies_highly_rated AS
-SELECT DISTINCT id, highly_rated_for_value AS rating_value FROM companies_fn2 WHERE highly_rated_for_value IS NOT NULL;
+--errores aqui creo, t.d.
+DROP TABLE IF EXISTS limpieza.companies_descripciones;
+CREATE TABLE limpieza.companies_descripciones AS
+SELECT DISTINCT
+    id,
+    descripcion_id
+FROM limpieza.companies_fn2
+WHERE descripcion_id IS NOT NULL;
+SELECT * FROM limpieza.companies_descripciones ORDER BY id;
 
-CREATE TABLE companies_critically_rated AS
-SELECT DISTINCT id, critically_rated_for_value AS rating_value FROM companies_fn2 WHERE critically_rated_for_value IS NOT NULL;
+--DROP TABLE limpieza.companies_highly_rated
+CREATE TABLE limpieza.companies_highly_rated AS
+SELECT DISTINCT
+    id,
+    highly_rated_for_value AS rating_value
+FROM limpieza.companies_fn2
+WHERE highly_rated_for_value IS NOT NULL;
+SELECT * FROM limpieza.companies_highly_rated ORDER BY id;
+
+--DROP TABLE limpieza.companies_critically_rated
+CREATE TABLE limpieza.companies_critically_rated AS
+SELECT DISTINCT
+    id,
+    critically_rated_for_value AS rating_value
+FROM limpieza.companies_fn2
+WHERE critically_rated_for_value IS NOT NULL;
+SELECT * FROM limpieza.companies_critically_rated ORDER BY id;
 ```
+Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4NF**.
 
 ---
 
-## Tablas Finales
-Después de la normalización completa, los datos están estructurados en **entidades independientes** sin dependencias multivaluadas:
-- `companies_base`
-- `companies_descripciones`
-- `companies_highly_rated`
-- `companies_critically_rated`
-- `descriptions`
+Tablas resultantes para el proyecto:
+- companies_base
+- companies_critically_rated
+- companies_descripciones
+- companies_highly_rated
+- descriptions
 
-Esta estructura optimizada **mejora la integridad referencial**, **reduce redundancias**, y **facilita consultas eficientes** sobre tendencias en calificaciones, salarios y beneficios.
-
-
-
-
-## Análisis de datos
-
-
-### Estadísticas de valores numéricos
-
-| Métrica             | Min     | Max     | Promedio |
-|---------------------|--------|--------|---------|
-| Rating Promedio     | 2.3    | 4.9    | 3.8     |
-| Total de Reseñas    | 100    | 20000  | 5600    |
-| Salario Promedio    | 25000  | 200000 | 85000   |
-| Total de Entrevistas| 50     | 5000   | 1200    |
-| Trabajos Disponibles| 5      | 500    | 150     |
-| Beneficios Totales  | 3      | 30     | 12      |
-
-### Conteo de valores nulos
-
-| Campo                 | Valores Nulos |
-|-----------------------|--------------|
-| Nombre de Empresa     | 0            |
-| Descripción          | 5            |
-| Rating Promedio      | 2            |
-| Altamente Valorado   | 10           |
-| Críticamente Valorado| 12           |
-| Total de Reseñas     | 1            |
-| Salario Promedio     | 4            |
-| Total de Entrevistas | 2            |
-| Trabajos Disponibles | 8            |
-| Beneficios Totales   | 3            |
-
-## Tablas y Representaciones Gráficas
-
-### Distribución de Ratings
-![Distribución de Ratings](imagenes/distribucion_ratings.png)
-- **Rango de Ratings:** 2.3 - 4.9
-- **Promedio:** 3.8
-
-### Comparación de Salarios Promedio
-![Comparación de Salarios](imagenes/comparacion_salarios.png)
-- **Salario Mínimo:** 25,000
-- **Salario Máximo:** 200,000
-- **Salario Promedio:** 85,000
-
-### Cantidad de Beneficios Ofrecidos por Empresa
-![Beneficios por Empresa](imagenes/beneficios_empresas.png)
-- **Mínimo de Beneficios:** 3
-- **Máximo de Beneficios:** 30
-- **Promedio de Beneficios:** 12
-
-## Conclusiones
-Se detectaron y corrigieron varias inconsistencias en los datos:
-
-1. **Formato de datos no uniforme:** Se transformaron valores con sufijo "k" en valores numéricos.
-2. **Valores NULL:** Se identificaron múltiples valores nulos, especialmente en `highly_rated_for` y `critically_rated_for`.
-3. **Filas duplicadas:** Se eliminaron registros idénticos y registros con nombres repetidos pero con ligeras diferencias en atributos.
-4. **Categorías combinadas:** Se dividieron y contaron las categorías en `highly_rated_for` y `critically_rated_for`.
-
-Este análisis y limpieza permiten que los datos sean más confiables y eficientes para su posterior uso en consultas y visualizaciones.
-
----
-**Fin del documento**
