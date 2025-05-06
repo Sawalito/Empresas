@@ -1,0 +1,123 @@
+# Entrega 4 del proyecto de Bases de Datos
+
+- Alejandro Castillo
+- Jorge Lafarga
+- Natalia Quintana
+- Silvestre Rosales
+- Saúl Rojas
+
+## Consultas SQL
+
+### 1. Evaluar las opiniones de los empleados sobre sus empresas
+
+#### Evaluación promedio de las top 5 empresas más calificadas
+```sql
+SELECT company_name, average_rating, total_reviews
+FROM limpieza.companies
+WHERE average_rating IS NOT NULL
+ORDER BY average_rating DESC
+LIMIT 5;
+```
+
+#### Opiniones promedio de empleados por empresa (con función de ventana)
+```sql
+SELECT company_name,
+    average_rating,
+    RANK() OVER (ORDER BY average_rating DESC) AS rating_rank
+FROM limpieza.companies
+WHERE average_rating IS NOT NULL
+LIMIT 10;
+```
+
+### 2. Identificar los aspectos más valorados y criticados en las compañías
+
+#### Aspectos más mencionados como altamente valorados o criticados
+```sql
+SELECT aspect,
+    COUNT(*) FILTER (WHERE highly_rated_for ILIKE '%' || aspect || '%') AS highly_rated_count,
+    COUNT(*) FILTER (WHERE critically_rated_for ILIKE '%' || aspect || '%') AS critically_rated_count
+FROM (
+  VALUES 
+    ('Company Culture'),
+    ('Job Security'),
+    ('Promotions / Appraisal'),
+    ('Salary & Benefits'),
+    ('Skill Development / Learning'),
+    ('Work Life Balance'),
+    ('Work Satisfaction')
+) AS a(aspect)
+CROSS JOIN limpieza.companies
+GROUP BY aspect
+ORDER BY highly_rated_count DESC, critically_rated_count DESC;
+```
+
+### 3. Analizar factores que influyen en la calificación de una empresa
+
+#### Relación entre salario promedio y calificación
+```sql
+SELECT company_name,
+    average_salary,
+    average_rating,
+    total_reviews
+FROM limpieza.companies
+WHERE average_salary IS NOT NULL AND average_rating IS NOT NULL
+ORDER BY average_rating DESC
+LIMIT 10;
+```
+
+#### Promedio de calificación agrupado por un aspecto altamente valorado
+```sql
+SELECT TRIM(regexp_split_to_table(highly_rated_for, ',')) AS aspect,
+    AVG(average_rating) AS avg_rating,
+    COUNT(*) AS num_empresas
+FROM limpieza.companies
+WHERE highly_rated_for IS NOT NULL AND average_rating IS NOT NULL
+GROUP BY aspect
+ORDER BY avg_rating DESC;
+```
+
+### 4. Comparar salarios y oportunidades laborales entre empresas
+
+#### Top 5 empresas con mejor salario promedio
+```sql
+SELECT company_name, average_salary
+FROM limpieza.companies
+WHERE average_salary IS NOT NULL
+ORDER BY average_salary DESC
+LIMIT 5;
+```
+
+#### Relación entre número de empleos disponibles y salario
+```sql
+SELECT company_name,
+    average_salary,
+    available_jobs
+FROM limpieza.companies
+WHERE average_salary IS NOT NULL AND available_jobs IS NOT NULL
+ORDER BY available_jobs DESC
+LIMIT 10;
+```
+
+### 5. Estudiar tendencias en el mercado laboral
+
+#### Relación entre entrevistas y trabajos disponibles (indicador de demanda)
+```sql
+SELECT company_name,
+    total_interviews,
+    available_jobs,
+    ROUND(CAST(total_interviews AS NUMERIC) / NULLIF(available_jobs, 0), 2) AS interviews_per_job
+FROM limpieza.companies
+WHERE total_interviews IS NOT NULL AND available_jobs IS NOT NULL
+ORDER BY interviews_per_job DESC
+LIMIT 10;
+```
+
+#### Promedio de beneficios ofrecidos por sector más valorado
+```sql
+SELECT TRIM(regexp_split_to_table(highly_rated_for, ',')) AS aspect,
+    AVG(total_benefits) AS avg_benefits
+FROM limpieza.companies
+WHERE highly_rated_for IS NOT NULL AND total_benefits IS NOT NULL
+GROUP BY aspect
+ORDER BY avg_benefits DESC;
+```

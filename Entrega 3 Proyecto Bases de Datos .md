@@ -95,10 +95,71 @@ WHERE ctid NOT IN (
 La normalización es un proceso esencial en el diseño de bases de datos, ya que reduce redundancias, mejora integridad y optimiza el rendimiento de consultas. En este proyecto, el conjunto de datos inicial no cumplía con Primera Forma Normal (1NF) debido a la presencia de atributos multivaluados y datos combinados en la columna ```description``.
 
 El objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF).
+Un problema inicial es que la tabla no contiene un identificador.
+
+### Asignación de ID a la Tabla `companies`
+Primero, se añade una columna **`id`** a la tabla `companies`, asignando valores únicos a cada registro usando `ROW_NUMBER()` para garantizar una clave artificial.
+`ROW_NUMBER()` genera un índice incremental basado en `ctid`, permitiendo una identificación única.
+```sql
+--Ponerle un id a las nuevas columnas
+ALTER TABLE limpieza.companies ADD COLUMN id INTEGER;
+
+UPDATE limpieza.companies
+SET id = sub.row_num
+FROM (
+  SELECT ctid, ROW_NUMBER() OVER (ORDER BY ctid) AS row_num
+  FROM limpieza.companies
+) sub
+WHERE limpieza.companies.ctid = sub.ctid;
+```
+---
+
+### Creación de una Secuencia para ID
+Se utiliza una **secuencia (`limpieza_companies_id_seq`)** para mantener la generación automática de identificadores en futuras inserciones.
+
+```sql
+DROP SEQUENCE IF EXISTS limpieza_companies_id_seq;
+CREATE SEQUENCE limpieza_companies_id_seq;
+
+SELECT setval('limpieza_companies_id_seq', (SELECT MAX(id) FROM limpieza.companies));
+
+ALTER TABLE limpieza.companies
+ALTER COLUMN id SET DEFAULT nextval('limpieza_companies_id_seq');
+
+SELECT * FROM limpieza.companies
+ORDER BY id;
+```
+
+
+### Relvar Original (Tabla Companies)
+
+Ahora podemos definir la relvar original (antes de cualquier descomposición) con el siguiente encabezado:
+
+```
+Companies = { id, company_name, average_rating, total_reviews, average_salary, total_interviews, available_jobs, total_benefits, description, highly_rated_for, critically_rated_for }
+```
+
+**Dependencia Funcional (DF):**
+
+El identificador único `id` determina de forma única el resto de los atributos:
+
+```
+{id} → { company_name, average_rating, total_reviews, average_salary, total_interviews, available_jobs, total_benefits, description, highly_rated_for, critically_rated_for }
+```
+
+**Dependencias Multivaluadas (DMV) No Triviales:**
+
+Dado que los campos `highly_rated_for` y `critically_rated_for` contienen múltiples valores en una misma celda, se tienen las siguientes dependencias multivaluadas:
+
+```
+{id} ->> { highly_rated_for }
+{id} ->> { critically_rated_for }
+```
+
 
 ### Problema en la estructura de datos inicial
 
-La columna `description` presentaba múltiples valoresccombinados en una sola cadena de texto, lo que impide un acceso eficiente a información clave sobre cada empresa.
+La columna `description` presenta múltiples valores combinados en una sola cadena de texto, lo que impide un acceso eficiente a información clave sobre cada empresa.
 
 Ejemplo de `description` antes de normalizar:
 
@@ -118,41 +179,6 @@ Ejemplo de `description` antes de normalizar:
 Para solucionar esto, es necesario  dividir `description` en entidades separadas , asegurando una representación clara y normalizada.
 
 ---
-
-### Asignación de ID a la Tabla `companies`
-Primero, se añade una columna **`id`** a la tabla `companies`, asignando valores únicos a cada registro usando `ROW_NUMBER()` para garantizar una clave artificial.
-`ROW_NUMBER()` genera un índice incremental basado en `ctid`, permitiendo una identificación única.
-```sql
---Ponerle un id a las nuevas columnas
-ALTER TABLE limpieza.companies ADD COLUMN id INTEGER;
-
-UPDATE limpieza.companies
-SET id = sub.row_num
-FROM (
-  SELECT ctid, ROW_NUMBER() OVER (ORDER BY ctid) AS row_num
-  FROM limpieza.companies
-) sub
-WHERE limpieza.companies.ctid = sub.ctid;
-```
-
----
-
-### Creación de una Secuencia para ID
-Se utiliza una **secuencia (`limpieza_companies_id_seq`)** para mantener la generación automática de identificadores en futuras inserciones.
-
-```sql
-DROP SEQUENCE IF EXISTS limpieza_companies_id_seq;
-CREATE SEQUENCE limpieza_companies_id_seq;
-
-SELECT setval('limpieza_companies_id_seq', (SELECT MAX(id) FROM limpieza.companies));
-
-ALTER TABLE limpieza.companies
-ALTER COLUMN id SET DEFAULT nextval('limpieza_companies_id_seq');
-
-SELECT * FROM limpieza.companies
-ORDER BY id;
-```
-
 
 ### Creación de una tabla `descriptions` para separar lo que contiene la columna description
 
@@ -452,4 +478,4 @@ Tablas resultantes para el proyecto:
 
 ## Análisis de datos a través de consultas SQL y creación de atributos analíticos
 
-to be continued...
+En entrega 4.
