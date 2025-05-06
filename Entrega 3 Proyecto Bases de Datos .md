@@ -290,7 +290,6 @@ SELECT * FROM limpieza.descriptions;
 
 SELECT COUNT(*) FROM limpieza.descriptions;
 
-
 SELECT COUNT(DISTINCT description) FROM limpieza.companies;
 ```
 En la tabla companies cambiar `description` por 'descripcion_id'.
@@ -312,12 +311,10 @@ ALTER TABLE limpieza.companies DROP COLUMN description;
 ```
 ---
 
-
 ### Descomposición de Atributos Multivaluados
 Debido a que los atributos `highly_rated_for` y `critically_rated_for` son multivaluados, se realizó una descomposición en relaciones independientes, eliminando la redundancia y dejando cada valor en una sola celda (cumpliendo 1NF y avanzando hacia 4NF).
 
 **Relvar Companies_Highly_Rated**
-
 ```
 Companies_Highly_Rated = { id, rating_value }
 
@@ -325,7 +322,6 @@ Companies_Highly_Rated = { id, rating_value }
 ```
 
 **Relvar Companies_Critically_Rated**
-
 ```
 Companies_Critically_Rated = { id, rating_value }
 
@@ -421,6 +417,16 @@ SELECT * FROM limpieza.companies WHERE id = 66;
 ### Aplicación del Teorema de Heath (4NF)
 Se descompone la tabla final en múltiples entidades.
 La  última fase  de normalización consiste en  eliminar dependencias multivaluadas  en la base de datos utilizando el  Teorema de Heath . Esto nos permite dividir correctamente la información y generar relaciones claras sin redundancias.  
+
+Para evitar la repetición de información que se ha fragmentado en las otras relaciones, se genera una relación que almacena únicamente los atributos que dependen funcionalmente de la clave principal sin la información descompuesta.
+
+**Relvar Companies_Base (Información Esencial de Empresa):**
+```
+Companies_Base = { id, company_name, average_rating, total_reviews, available_jobs, total_benefits }
+
+{id} → { company_name, average_rating, total_reviews, available_jobs, total_benefits }
+```
+
 
 Tablas finales después de 4NF:   
 - `companies_base`: Información esencial de cada empresa.  
