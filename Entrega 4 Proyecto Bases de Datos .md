@@ -9,24 +9,58 @@
 ## Consultas SQL
 
 ### 1. Evaluar las opiniones de los empleados sobre sus empresas
+ 
+#### Cantidad de empresas agrupadas por su calificación promedio (average_rating). 
+Se filtran las calificaciones promedio para que solo se incluyan valores entre 1 y 5, y se ordenan los resultados de forma descendente 
+según la calificación promedio. Esto permite analizar la distribución de empresas según sus calificaciones.
 
-#### Evaluación promedio de las top 5 empresas más calificadas
 ```sql
-SELECT company_name, average_rating, total_reviews
+SELECT average_rating,
+    COUNT(*) AS count_companies
 FROM limpieza.companies
-WHERE average_rating IS NOT NULL
-ORDER BY average_rating DESC
-LIMIT 5;
+WHERE average_rating IN (1, 2, 3, 4, 5)
+GROUP BY average_rating
+ORDER BY average_rating DESC;
 ```
 ```plaintext
-                  company_name                  | average_rating | total_reviews
-------------------------------------------------+----------------+---------------
- Dr.SNS Rajalakshmi College Of Arts and Science |              5 |           221
- Lavender Technology                            |              5 |           508
- InternEzy                                      |              5 |           414
- Stirring Minds                                 |              5 |           278
- Matrimonialsindia                              |              5 |           171
+average_rating | count_companies
+---------------+-----------------
+              5 |              11
+              4 |            1112
+              3 |              63
+              2 |               1
 ```
+
+#### Análisis de la varianza en las calificaciones de las empresas con promedio perfecto
+
+En lugar de simplemente listar las empresas con una calificación promedio de 5, es más útil analizar la varianza en las calificaciones individuales de estas empresas. Esto puede revelar si las calificaciones perfectas son consistentes o si están influenciadas por valores atípicos.
+
+```sql
+SELECT company_name,
+    VARIANCE(rating) AS rating_variance,
+    COUNT(*) AS total_reviews
+FROM limpieza.reviews
+WHERE company_name IN (
+    SELECT company_name
+    FROM limpieza.companies
+    WHERE average_rating = 5
+)
+GROUP BY company_name
+ORDER BY rating_variance ASC;
+```
+
+```plaintext
+                  company_name                  | rating_variance | total_reviews
+------------------------------------------------+-----------------+---------------
+ Lavender Technology                            |           0.000 |           508
+ InternEzy                                      |           0.000 |           414
+ Stirring Minds                                 |           0.000 |           278
+ Matrimonialsindia                              |           0.000 |           171
+ Dr.SNS Rajalakshmi College Of Arts and Science |           0.000 |           221
+```
+
+Este análisis muestra que todas las empresas con calificación promedio de 5 tienen una varianza de 0, lo que indica que todas las calificaciones individuales son consistentemente perfectas. Si se detectara una varianza mayor a 0, se podría investigar más a fondo para identificar posibles anomalías o patrones en las calificaciones.
+
 
 #### Opiniones promedio de empleados por empresa (con función de ventana)
 ```sql
@@ -36,20 +70,8 @@ SELECT company_name,
 FROM limpieza.companies
 WHERE average_rating IS NOT NULL
 LIMIT 10;
-```
-```plaintext
-                   company_name                  | average_rating | rating_rank
-------------------------------------------------+----------------+-------------
- InternEzy                                      |              5 |           1
- Deejos Engineers & Contractors                 |              5 |           1
- Dr.SNS Rajalakshmi College Of Arts and Science |              5 |           1
- Lavender Technology                            |              5 |           1
- Stirring Minds                                 |              5 |           1
- IBC Techno                                     |              5 |           1
- Matrimonialsindia                              |              5 |           1
- Royal Migration Solutions                      |              5 |           1
- Salaryfy                                       |              5 |           1
- Jayasree Techno Solutions                      |              5 |           1
+```markdown
+
 ```
 
 ### 2. Identificar los aspectos más valorados y criticados en las compañías
