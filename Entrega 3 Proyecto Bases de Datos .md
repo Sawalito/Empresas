@@ -335,7 +335,6 @@ Companies_Critically_Rated = { id, rating_value }
 DROP TABLE IF EXISTS limpieza.companies_fn1;
 
 CREATE TABLE limpieza.companies_fn1 AS
-
 -- Filas con valores individuales de highly_rated_for
 SELECT
     c.id,
@@ -344,6 +343,8 @@ SELECT
     TRIM(value) AS rating_value,
     c.critically_rated_for,
     c.total_reviews,
+    c.average_salary,
+    c.total_interviews,
     c.available_jobs,
     c.total_benefits,
     c.descripcion_id
@@ -360,6 +361,8 @@ SELECT
     NULL AS rating_value,
     c.critically_rated_for,
     c.total_reviews,
+    c.average_salary,
+    c.total_interviews,
     c.available_jobs,
     c.total_benefits,
     c.descripcion_id
@@ -370,6 +373,7 @@ WHERE c.highly_rated_for IS NULL;
 Se aplica el mismo proceso para `critically_rated_for`.
 
 ```sql
+DROP TABLE IF EXISTS limpieza.companies_fn2;
 CREATE TABLE limpieza.companies_fn2 AS
 -- Descomposición de critically_rated_for
 SELECT
@@ -379,14 +383,14 @@ SELECT
     c.rating_value AS highly_rated_for_value,
     TRIM(value) AS critically_rated_for_value,
     c.total_reviews,
+    c.average_salary,
+    c.total_interviews,
     c.available_jobs,
     c.total_benefits,
     c.descripcion_id
 FROM limpieza.companies_fn1 c,
      LATERAL regexp_split_to_table(c.critically_rated_for, '\s*,\s*') AS value
-
 UNION ALL
-
 -- Fila con NULL si critically_rated_for lo es
 SELECT
     c.id,
@@ -395,6 +399,8 @@ SELECT
     c.rating_value AS highly_rated_for_value,
     NULL AS critically_rated_for_value,
     c.total_reviews,
+    c.average_salary,
+    c.total_interviews,
     c.available_jobs,
     c.total_benefits,
     c.descripcion_id
@@ -422,9 +428,13 @@ Para evitar la repetición de información que se ha fragmentado en las otras re
 
 **Relvar Companies_Base (Información Esencial de Empresa):**
 ```
-Companies_Base = { id, company_name, average_rating, total_reviews, available_jobs, total_benefits }
+Companies_Base = { id, company_name, average_rating, total_reviews, average_salary, total_interviews, available_jobs, total_benefits }
 
-{id} → { company_name, average_rating, total_reviews, available_jobs, total_benefits }
+descripcion_id, companies_highly_rated_id, companies_critically_rated_id }
+
+{id} → { company_name, average_rating, total_reviews,  average_salary, total_interviews, available_jobs, total_benefits}
+
+ descripcion_id, companies_highly_rated_id, companies_critically_rated_id }
 ```
 
 
@@ -437,20 +447,24 @@ Tablas finales después de 4NF:
 
 ```sql
 --Teorema de Heath 4FN
-
---DROP TABLE limpieza.companies_base;
+*********************
+DROP TABLE IF EXISTS limpieza.companies_base;
 CREATE TABLE limpieza.companies_base AS
 SELECT DISTINCT
     id,
     company_name,
     average_rating,
     total_reviews,
+    average_salary,
+    total_interviews,
     available_jobs,
     total_benefits
 FROM limpieza.companies_fn2;
 SELECT * FROM limpieza.companies_base;
 
---DROP TABLE limpieza.companies_descripciones;
+
+/errores aqui creo, t.d.
+DROP TABLE IF EXISTS limpieza.companies_descripciones;
 CREATE TABLE limpieza.companies_descripciones AS
 SELECT DISTINCT
     id,
@@ -489,6 +503,8 @@ Tablas resultantes para el proyecto:
 - descriptions
 
 
-## Análisis de datos a través de consultas SQL y creación de atributos analíticos
+Este cambio asegura que los nombres de las columnas coincidan con los definidos en las tablas originales y evita errores de sintaxis o referencias inexistentes.
+Hay error 
 
-En entrega 4.
+
+
