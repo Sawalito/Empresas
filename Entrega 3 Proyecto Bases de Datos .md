@@ -447,7 +447,6 @@ Tablas finales después de 4NF:
 
 ```sql
 --Teorema de Heath 4FN
-*********************
 DROP TABLE IF EXISTS limpieza.companies_base;
 CREATE TABLE limpieza.companies_base AS
 SELECT DISTINCT
@@ -463,7 +462,7 @@ FROM limpieza.companies_fn2;
 SELECT * FROM limpieza.companies_base;
 
 
-/errores aqui creo, t.d.
+--errores aqui creo, t.d.
 DROP TABLE IF EXISTS limpieza.companies_descripciones;
 CREATE TABLE limpieza.companies_descripciones AS
 SELECT DISTINCT
