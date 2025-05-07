@@ -378,6 +378,11 @@ SELECT
     c.descripcion_id
 FROM limpieza.companies c
 WHERE c.highly_rated_for IS NULL;
+
+-- Agregar clave primaria a limpieza.companies_fn1
+ALTER TABLE limpieza.companies_fn1
+ADD CONSTRAINT pk_companies_fn1 PRIMARY KEY (id, rating_value);
+
 ```
 
 Se aplica el mismo proceso para `critically_rated_for`.
@@ -416,6 +421,10 @@ SELECT
     c.descripcion_id
 FROM limpieza.companies_fn1 c
 WHERE c.critically_rated_for IS NULL;
+
+-- Agregar clave primaria a limpieza.companies_fn2
+ALTER TABLE limpieza.companies_fn2
+ADD CONSTRAINT pk_companies_fn2 PRIMARY KEY (id, highly_rated_for_value, critically_rated_for_value);
 ```
 ```sql
 SELECT * FROM limpieza.companies_fn2 WHERE id = 66;
@@ -426,7 +435,6 @@ SELECT * FROM limpieza.companies_fn1 ORDER BY id;
 
 SELECT * FROM limpieza.companies WHERE id = 66;
 ```
-
 
 ---
 
@@ -457,6 +465,8 @@ Tablas finales después de 4NF:
 
 ```sql
 --Teorema de Heath 4FN
+
+-- Crear tabla companies_base con clave primaria
 DROP TABLE IF EXISTS limpieza.companies_base;
 CREATE TABLE limpieza.companies_base AS
 SELECT DISTINCT
@@ -469,10 +479,12 @@ SELECT DISTINCT
     available_jobs,
     total_benefits
 FROM limpieza.companies_fn2;
-SELECT * FROM limpieza.companies_base;
 
+-- Agregar clave primaria a companies_base
+ALTER TABLE limpieza.companies_base
+ADD CONSTRAINT pk_companies_base PRIMARY KEY (id);
 
---errores aqui creo, t.d.
+-- Crear tabla companies_descripciones con clave primaria y foránea
 DROP TABLE IF EXISTS limpieza.companies_descripciones;
 CREATE TABLE limpieza.companies_descripciones AS
 SELECT DISTINCT
@@ -480,24 +492,42 @@ SELECT DISTINCT
     descripcion_id
 FROM limpieza.companies_fn2
 WHERE descripcion_id IS NOT NULL;
-SELECT * FROM limpieza.companies_descripciones ORDER BY id;
 
---DROP TABLE limpieza.companies_highly_rated
+-- Agregar clave primaria y clave foránea a companies_descripciones
+ALTER TABLE limpieza.companies_descripciones
+ADD CONSTRAINT pk_companies_descripciones PRIMARY KEY (id, descripcion_id),
+ADD CONSTRAINT fk_companies_descripciones FOREIGN KEY (descripcion_id) REFERENCES limpieza.descriptions (id);
+
+-- Crear tabla companies_highly_rated con clave primaria
+DROP TABLE IF EXISTS limpieza.companies_highly_rated;
 CREATE TABLE limpieza.companies_highly_rated AS
 SELECT DISTINCT
     id,
     highly_rated_for_value AS rating_value
 FROM limpieza.companies_fn2
 WHERE highly_rated_for_value IS NOT NULL;
-SELECT * FROM limpieza.companies_highly_rated ORDER BY id;
 
---DROP TABLE limpieza.companies_critically_rated
+-- Agregar clave primaria a companies_highly_rated
+ALTER TABLE limpieza.companies_highly_rated
+ADD CONSTRAINT pk_companies_highly_rated PRIMARY KEY (id, rating_value);
+
+-- Crear tabla companies_critically_rated con clave primaria
+DROP TABLE IF EXISTS limpieza.companies_critically_rated;
 CREATE TABLE limpieza.companies_critically_rated AS
 SELECT DISTINCT
     id,
     critically_rated_for_value AS rating_value
 FROM limpieza.companies_fn2
 WHERE critically_rated_for_value IS NOT NULL;
+
+-- Agregar clave primaria a companies_critically_rated
+ALTER TABLE limpieza.companies_critically_rated
+ADD CONSTRAINT pk_companies_critically_rated PRIMARY KEY (id, rating_value);
+
+-- Verificar las tablas
+SELECT * FROM limpieza.companies_base;
+SELECT * FROM limpieza.companies_descripciones ORDER BY id;
+SELECT * FROM limpieza.companies_highly_rated ORDER BY id;
 SELECT * FROM limpieza.companies_critically_rated ORDER BY id;
 ```
 Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4NF**.
@@ -510,10 +540,4 @@ Tablas resultantes para el proyecto:
 - companies_descripciones
 - companies_highly_rated
 - descriptions
-
-
-Este cambio asegura que los nombres de las columnas coincidan con los definidos en las tablas originales y evita errores de sintaxis o referencias inexistentes.
-Hay error 
-
-
 
