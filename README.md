@@ -190,16 +190,17 @@ Con estos pasos, los datos en el esquema `limpieza` están listos para su análi
 
 ## Normalización de datos hasta cuarta formal normal
 
+
 El objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF).
 Un problema inicial es que la tabla no contiene un identificador.
 
 ### Asignación de ID a la Tabla `companies`
 Primero, se añade una columna **`id`** a la tabla `companies`, asignando valores únicos a cada registro usando `ROW_NUMBER()` para garantizar una clave artificial.
 `ROW_NUMBER()` genera un índice incremental basado en `ctid`, permitiendo una identificación única.
-
 ```sql
 --Ponerle un id a las nuevas columnas
-ALTER TABLE limpieza.companies ADD COLUMN id INTEGER;
+ALTER TABLE limpieza.companies 
+ADD COLUMN id INTEGER;
 
 UPDATE limpieza.companies
 SET id = sub.row_num
@@ -208,8 +209,15 @@ FROM (
   FROM limpieza.companies
 ) sub
 WHERE limpieza.companies.ctid = sub.ctid;
+
+ALTER TABLE limpieza.companies
+ALTER COLUMN id SET NOT NULL;
+
+ALTER TABLE limpieza.companies
+ADD CONSTRAINT pk_companies PRIMARY KEY (id);
 ```
 ---
+
 ### Creación de una Secuencia para ID
 Se utiliza una **secuencia (`limpieza_companies_id_seq`)** para mantener la generación automática de identificadores en futuras inserciones.
 
@@ -226,7 +234,9 @@ SELECT * FROM limpieza.companies
 ORDER BY id;
 ```
 
+
 ### Relvar Original (Tabla Companies)
+
 Ahora podemos definir la relvar original (antes de cualquier descomposición) con el siguiente encabezado:
 
 ```
@@ -299,7 +309,7 @@ Para cumplir con  1NF , descomponemos la columna `description` en una nueva tabl
 
 DROP TABLE IF EXISTS limpieza.descriptions;
 CREATE TABLE limpieza.descriptions (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     description TEXT UNIQUE,
     location TEXT,
     industry TEXT,
@@ -391,18 +401,22 @@ En la tabla companies cambiar `description` por 'descripcion_id'.
 ```sql
 -- Agregar columna de descripcion
 ALTER TABLE limpieza.companies
-ADD COLUMN descripcion_id INTEGER;
+ADD COLUMN descripcion_id BIGINT REFERENCES limpieza.descriptions(id);
 
 UPDATE limpieza.companies c
 SET descripcion_id = d.id
 FROM limpieza.descriptions d
 WHERE c.description = d.description;
 
-ALTER TABLE limpieza.descriptions DROP COLUMN description;
+ALTER TABLE limpieza.descriptions 
+DROP COLUMN dsescription;
+
 SELECT * FROM limpieza.descriptions ORDER BY id;
 
 SELECT * FROM limpieza.companies;
-ALTER TABLE limpieza.companies DROP COLUMN description;
+
+ALTER TABLE limpieza.companies 
+DROP COLUMN description;
 ```
 ---
 
@@ -425,7 +439,6 @@ Companies_Critically_Rated = { id, rating_value }
 
 
 ```sql
-
 --LLevar a FN1
 DROP TABLE IF EXISTS limpieza.companies_fn1;
 
@@ -463,6 +476,11 @@ SELECT
     c.descripcion_id
 FROM limpieza.companies c
 WHERE c.highly_rated_for IS NULL;
+
+-- Agregar clave primaria a limpieza.companies_fn1
+ALTER TABLE limpieza.companies_fn1
+ADD CONSTRAINT pk_companies_fn1 PRIMARY KEY (id, rating_value);
+
 ```
 
 Se aplica el mismo proceso para `critically_rated_for`.
@@ -501,6 +519,10 @@ SELECT
     c.descripcion_id
 FROM limpieza.companies_fn1 c
 WHERE c.critically_rated_for IS NULL;
+
+-- Agregar clave primaria a limpieza.companies_fn2
+ALTER TABLE limpieza.companies_fn2
+ADD CONSTRAINT pk_companies_fn2 PRIMARY KEY (id, highly_rated_for_value, critically_rated_for_value);
 ```
 ```sql
 SELECT * FROM limpieza.companies_fn2 WHERE id = 66;
@@ -511,7 +533,6 @@ SELECT * FROM limpieza.companies_fn1 ORDER BY id;
 
 SELECT * FROM limpieza.companies WHERE id = 66;
 ```
-
 
 ---
 
@@ -542,6 +563,8 @@ Tablas finales después de 4NF:
 
 ```sql
 --Teorema de Heath 4FN
+
+-- Crear tabla companies_base con clave primaria
 DROP TABLE IF EXISTS limpieza.companies_base;
 CREATE TABLE limpieza.companies_base AS
 SELECT DISTINCT
@@ -554,10 +577,12 @@ SELECT DISTINCT
     available_jobs,
     total_benefits
 FROM limpieza.companies_fn2;
-SELECT * FROM limpieza.companies_base;
 
+-- Agregar clave primaria a companies_base
+ALTER TABLE limpieza.companies_base
+ADD CONSTRAINT pk_companies_base PRIMARY KEY (id);
 
---errores aqui creo, t.d.
+-- Crear tabla companies_descripciones con clave primaria y foránea
 DROP TABLE IF EXISTS limpieza.companies_descripciones;
 CREATE TABLE limpieza.companies_descripciones AS
 SELECT DISTINCT
@@ -565,34 +590,44 @@ SELECT DISTINCT
     descripcion_id
 FROM limpieza.companies_fn2
 WHERE descripcion_id IS NOT NULL;
-SELECT * FROM limpieza.companies_descripciones ORDER BY id;
 
---DROP TABLE limpieza.companies_highly_rated
+-- Agregar clave primaria y clave foránea a companies_descripciones
+ALTER TABLE limpieza.companies_descripciones
+ADD CONSTRAINT pk_companies_descripciones PRIMARY KEY (id, descripcion_id),
+ADD CONSTRAINT fk_companies_descripciones FOREIGN KEY (descripcion_id) REFERENCES limpieza.descriptions (id);
+
+-- Crear tabla companies_highly_rated con clave primaria
+DROP TABLE IF EXISTS limpieza.companies_highly_rated;
 CREATE TABLE limpieza.companies_highly_rated AS
 SELECT DISTINCT
     id,
     highly_rated_for_value AS rating_value
 FROM limpieza.companies_fn2
 WHERE highly_rated_for_value IS NOT NULL;
-SELECT * FROM limpieza.companies_highly_rated ORDER BY id;
 
---DROP TABLE limpieza.companies_critically_rated
+-- Agregar clave primaria a companies_highly_rated
+ALTER TABLE limpieza.companies_highly_rated
+ADD CONSTRAINT pk_companies_highly_rated PRIMARY KEY (id, rating_value);
+
+-- Crear tabla companies_critically_rated con clave primaria
+DROP TABLE IF EXISTS limpieza.companies_critically_rated;
 CREATE TABLE limpieza.companies_critically_rated AS
 SELECT DISTINCT
     id,
     critically_rated_for_value AS rating_value
 FROM limpieza.companies_fn2
 WHERE critically_rated_for_value IS NOT NULL;
+
+-- Agregar clave primaria a companies_critically_rated
+ALTER TABLE limpieza.companies_critically_rated
+ADD CONSTRAINT pk_companies_critically_rated PRIMARY KEY (id, rating_value);
+
+-- Verificar las tablas
+SELECT * FROM limpieza.companies_base;
+SELECT * FROM limpieza.companies_descripciones ORDER BY id;
+SELECT * FROM limpieza.companies_highly_rated ORDER BY id;
 SELECT * FROM limpieza.companies_critically_rated ORDER BY id;
 ```
 Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4NF**.
 
 ---
-
-Tablas resultantes para el proyecto:
-- companies_base
-- companies_critically_rated
-- companies_descripciones
-- companies_highly_rated
-- descriptions
-
