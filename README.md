@@ -19,26 +19,82 @@ El análisis de datos de empresas permite comprender tendencias del mercado labo
 - **Promedios salariales** y condiciones laborales en distintas industrias.
 - **Beneficios más valorados** por empleados y candidatos a puestos de trabajo.
 
-Este conjunto de datos contiene información sobre las principales **10,000 empresas**, incluyendo:
-- Nombre y descripción.
-- Calificación promedio.
-- Aspectos más valorados y criticados.
-- Total de reseñas, salario promedio y cantidad de entrevistas realizadas.
-- Número de empleos disponibles y beneficios ofrecidos.
+## **Descripcion del dataset**
+El dataset original es un archivo csv llamado `companies.csv`.
 
-### **Fuente del Dataset**
-- **Recolector**: Vedant Khapekar.
-- **Fuente original**: Ambition Box, una plataforma de reclutamiento.
-- **Disponibilidad**: Se encuentra en **Kaggle**.
-- **Frecuencia de actualización**: No se actualiza, aunque los datos cambien en Ambition Box.
+Este conjunto de datos contiene información sobre las principales **10,000 empresas**, incluyendo su nombre, descripción, calificación, aspectos más valorados y criticados, número de reseñas, salario promedio, cantidad de entrevistas realizadas, cantidad de empleos disponibles y beneficios.
 
-### **Consideraciones Éticas**
-Este análisis implica responsabilidad en el uso de los datos:
-- **Privacidad**: Asegurar que la información sensible esté protegida.
-- **Uso responsable**: Evitar interpretaciones sesgadas o manipuladas.
-- **Transparencia**: Definir claramente metodologías y fuentes de datos.
-- **Evitar discriminación**: No favorecer a empresas por tamaño, ubicación o industria.
+Fue recopilado por Vedant Khapekar. La fuente original de los datos proviene de Ambition Box, una plataforma de reclutamiento. 
 
+El dataset original está disponible en [Kaggle](https://www.kaggle.com/datasets/vedantkhapekar/top-10000-companies-dataset). No se actualiza, aunque los datos cambien en Ambition Box.
+
+### **Atributos del Dataset**
+En este conjunto de datos hay 10 000 tuplas que contienen informacion de 10 000 empresas, con 10 atributos que permiten realizar un análisis profundo del mercado laboral.
+Cada atributo tiene el siguiete significado de acuerdo a la pagina de origen.
+
+* Company_name - Nombre de la empresa.  
+* Description - Breve descripción de la empresa, incluyendo industria y número de  
+  Empleados.  
+* Ratings - Calificación promedio de la empresa según las reseñas.  
+* Highly_rated_for - Aspectos altamente valorados de la empresa por los empleados.  
+* Critically_rated_for - Aspectos más criticados de la empresa.  
+* Total_reviews - Número total de reseñas de empleados sobre la empresa.  
+* Avg_salary - Salario promedio en la empresa.  
+* Interviews_taken - Cantidad de entrevistas que ha hecho la empresa.  
+* Total_jobs_available - Número total de empleos actualmente disponibles en la empresa.  
+* Total_benefits - Cantidad de beneficios que ofrece la empresa i.e. formas alternativas de remuneración, como acciones u otras inversiones.
+
+En el csv todos los atributos son texto, pero por el tipo de dato intencionado podemos observar las siguientes caracteristicas:
+
+Los atributos numéricos son :     
+* Ratings (float) → Calificación promedio de la empresa.  
+* Total_reviews (text, pero representa valores numéricos).  
+* Avg_salary (text, pero representa valores numéricos).  
+* Interviews_taken (text, pero representa valores numéricos).  
+* Total_jobs_available (text, pero representa valores numéricos).  
+* Total_benefits (text, pero representa valores numéricos).
+Los que representan valores numéricos pero son text, es porque sus números están expresados como “3k” en vez de 3000.
+
+Los atributos categóricos son:  
+* Company_name   
+* Highly_rated_for   
+* Critically_rated_for  
+        
+Los atributos de tipo texto son:
+ * Company_name  
+* Description  
+* Highly_rated_for  
+* Critically_rated_for
+
+No hay atributos de tipo temporal y/o fecha
+
+El objetivo de este conjunto de datos es proporcionar información detallada sobre las principales 10,000 empresas, permitiendo analizar factores clave del mercado laboral. El equipo lo utilizará para:
+
+* Evaluar las opiniones de los empleados sobre sus empresas.  
+* Identificar los aspectos más valorados y criticados en las compañías.  
+* Analizar factores que influyen en la calificación de una empresa.  
+* Comparar salarios y oportunidades laborales entre empresas.  
+* Estudiar tendencias en el mercado laboral, como la demanda de talento y los beneficios ofrecidos.
+
+**Consideraciones Éticas que conlleva el análisis y explotación de dichos datos**
+* Privacidad y anonimización: Asegurar que los datos personales de empleados o evaluadores estén protegidos y, si es necesario, anonimizar información sensible.  
+* Uso responsable de la información: No utilizar los datos para generar informes sesgados o manipulados que puedan afectar injustamente la reputación de una empresa o individuo.  
+* Transparencia: Indicar claramente las fuentes de los datos y las metodologías empleadas para su análisis.  
+* Evitar discriminación: **Asegurar que el análisis no refuerce sesgos en la contratación o evaluación de empresas en función de factores como ubicación, industria o tamaño.**
+* Impacto en el mercado laboral: Considerar cómo la difusión de estos análisis podría influir en decisiones de contratación, salarios y beneficios, evitando afectar negativamente a empresas o empleados.
+
+### Análisis Preliminar del Dataset de Empresas
+A continuación, se presenta una vista de los datos:
+
+| **Empresa**   | **Descripción** | **Calificación** | **Aspectos Valorados** | **Aspectos Criticados** | **Total Reseñas** | **Salario Promedio** | **Entrevistas** | **Trabajos Disponibles** | **Beneficios** |
+|--------------|---------------|----------------|----------------------|----------------------|----------------|----------------|------------|---------------------|------------|
+| TCS         | IT Services & Consulting, 1L+ empleados, 56 años | 3.8 | Job Security, Work Life Balance | Promotions / Appraisal, Salary & Benefits | 73.1k | 856.9k | 6.1k | 847 | 11.5k |
+| Accenture   | IT Services & Consulting, 1L+ empleados, 35 años | 4.0 | Company Culture, Skill Development / Learning, Job Security | - | 46.4k | 584.6k | 4.3k | 9.9k | 7.1k |
+| Cognizant   | IT Services & Consulting, Forbes Global 2000, 30 años | 3.9 | Skill Development / Learning | Promotions / Appraisal | 41.7k | 561.5k | 3.6k | 460 | 5.8k |
+
+Este dataset permite realizar análisis sobre tendencias del mercado laboral, identificar patrones de satisfacción entre empleados y comparar oportunidades laborales entre diferentes compañías. Su estructura facilita estudios sobre correlaciones entre calificación, salario y beneficios ofrecidos. 
+
+Para un análisis más profundo, sería útil limpiar y transformar ciertos atributos, como los valores de salarios expresados en formato de texto (`"3k"` en lugar de `3000`) y asegurar la homogeneidad en los aspectos valorados y criticados por empresa.
 ---
 
 ## **Instalación y Configuración**
@@ -48,7 +104,7 @@ git clone [URL_DEL_REPOSITORIO]
 cd Empresas
 ```
 
-## Instrucciones para psql
+## Instrucciones para psql en la terminal
 
 ### Borrar y crear la base de datos
 ```sql
@@ -86,7 +142,18 @@ SET CLIENT_ENCODING TO 'UTF8';
 \copy companies (company_name, description, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, available_jobs, total_benefits) FROM 'C:/Users/Light 16 Pro/Downloads/companies.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',');
 ```
 
+## Scripts SQL
+Estos scripts se encuentran en la carpeta "Ejecuta esto", estan divididos por secciones de acuerdo a la accion que hacen en la base de datos.
 
+2.`*01_data_cleaning.sql`: Crea un esquema `limpieza` y le copia los datos originales. Luego realiza la limpieza de datos, incluyendo la conversión de valores y eliminación de duplicados.
+3. `02_normalization.sql`: Lleva los datos hasta la Cuarta Forma Normal (4NF).
+4. `03_analysis.sql`: Contiene consultas analíticas y creación de atributos derivados.
+
+En PostgreSQL puedes ejecutar los scripts con
+```sql
+\i script.sql --el nombre del archivo
+```
+La documentacion de estos scripts se explica a continuacion.
 
 ### Limpieza y Conversión de Datos
 
@@ -182,14 +249,9 @@ WHERE ctid NOT IN (
   GROUP BY company_name, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, total_benefits
 );
 ```
-
 Con estos pasos, los datos en el esquema `limpieza` están listos para su análisis y normalización.
 
-
-
-
 ## Normalización de datos hasta cuarta formal normal
-
 
 El objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF).
 Un problema inicial es que la tabla no contiene un identificador.
@@ -415,8 +477,10 @@ SELECT * FROM limpieza.descriptions ORDER BY id;
 
 SELECT * FROM limpieza.companies;
 
+-- CUIDADO: Eliminar la columna description de la tabla companies
 ALTER TABLE limpieza.companies 
 DROP COLUMN description;
+
 ```
 ---
 
@@ -630,4 +694,13 @@ SELECT * FROM limpieza.companies_critically_rated ORDER BY id;
 ```
 Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4NF**.
 
+Crear un esquema final para las tablas normalizadas y moverlas allí.
+```sql
+CREATE SCHEMA final;
+
+ALTER TABLE limpieza.companies_base SET SCHEMA final;
+ALTER TABLE limpieza.companies_descripciones SET SCHEMA final;
+ALTER TABLE limpieza.companies_highly_rated SET SCHEMA final;
+ALTER TABLE limpieza.companies_critically_rated SET SCHEMA final;
+```
 ---

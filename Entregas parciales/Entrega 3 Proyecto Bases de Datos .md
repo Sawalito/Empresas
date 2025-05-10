@@ -7,7 +7,7 @@
 - Saúl Rojas
 
 ### Normalización de datos hasta cuarta formal normal
-Para no regarla, creamos un esquema limpieza que asegura una separacion entre los datos originales y estos procesados. El siguiente codigo tiene la entrega pasada de limpieza y conversion de datos.
+Para garantizar la integridad y consistencia de los datos, se realizaron los siguientes pasos de limpieza y conversión en el esquema `limpieza`. El siguiente codigo tiene la entrega pasada de limpieza y conversion de datos.
 
 ```sql
 CREATE SCHEMA limpieza;
@@ -317,6 +317,7 @@ SELECT * FROM limpieza.descriptions ORDER BY id;
 
 SELECT * FROM limpieza.companies;
 
+-- CUIDADO: Eliminar la columna description de la tabla companies
 ALTER TABLE limpieza.companies 
 DROP COLUMN description;
 ```
@@ -540,4 +541,18 @@ Tablas resultantes para el proyecto:
 - companies_descripciones
 - companies_highly_rated
 - descriptions
+
+Crear un esquema final para las tablas normalizadas y moverlas allí.
+```sql
+CREATE SCHEMA final;
+
+ALTER TABLE limpieza.companies_base SET SCHEMA final;
+ALTER TABLE limpieza.companies_descripciones SET SCHEMA final;
+ALTER TABLE limpieza.companies_highly_rated SET SCHEMA final;
+ALTER TABLE limpieza.companies_critically_rated SET SCHEMA final;
+```
+
+
+### ERD
+
 

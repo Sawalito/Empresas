@@ -31,35 +31,6 @@ average_rating | count_companies
               2 |               1
 ```
 
-#### Análisis de la varianza en las calificaciones de las empresas con promedio perfecto
-
-```sql
-SELECT company_name,
-    VARIANCE(rating) AS rating_variance,
-    COUNT(*) AS total_reviews
-FROM limpieza.reviews
-WHERE company_name IN (
-    SELECT company_name
-    FROM limpieza.companies
-    WHERE average_rating = 5
-)
-GROUP BY company_name
-ORDER BY rating_variance ASC;
-```
-
-```plaintext
-                  company_name                  | rating_variance | total_reviews
-------------------------------------------------+-----------------+---------------
- Lavender Technology                            |           0.000 |           508
- InternEzy                                      |           0.000 |           414
- Stirring Minds                                 |           0.000 |           278
- Matrimonialsindia                              |           0.000 |           171
- Dr.SNS Rajalakshmi College Of Arts and Science |           0.000 |           221
-```
-
-Este análisis muestra que todas las empresas con calificación promedio de 5 tienen una varianza de 0, lo que indica que todas las calificaciones individuales son consistentemente perfectas. Si se detectara una varianza mayor a 0, se podría investigar más a fondo para identificar posibles anomalías o patrones en las calificaciones.
-
-
 #### Opiniones promedio de empleados por empresa (con función de ventana)
 ```sql
 SELECT company_name,
