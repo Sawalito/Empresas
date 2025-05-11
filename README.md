@@ -61,7 +61,7 @@ Los atributos categóricos son:
 * Critically_rated_for  
         
 Los atributos de tipo texto son:
- * Company_name  
+* Company_name  
 * Description  
 * Highly_rated_for  
 * Critically_rated_for
@@ -145,7 +145,7 @@ SET CLIENT_ENCODING TO 'UTF8';
 
 ## Scripts SQL
 Estos scripts se encuentran en la carpeta "Ejecuta esto", estan divididos por secciones de acuerdo a la accion que hacen en la base de datos.
-* `01_data_cleaning.sql`: Crea un esquema `limpieza` y le copia los datos originales. Luego realiza la limpieza de datos, incluyendo la conversión de valores y eliminación de duplicados.
+* `01_limpieza.sql`: Crea un esquema `limpieza` y le copia los datos originales. Luego realiza la limpieza de datos, incluyendo la conversión de valores y eliminación de duplicados.
 * `02_normalization.sql`: Lleva los datos hasta la Cuarta Forma Normal (4NF).
 * `03_analysis.sql`: Contiene consultas analíticas y creación de atributos derivados.
 

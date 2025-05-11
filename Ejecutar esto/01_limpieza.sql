@@ -1,4 +1,6 @@
-CREATE SCHEMA limpieza;
+DROP SCHEMA IF EXISTS limpieza CASCADE;
+
+CREATE SCHEMA IF NOT EXISTS limpieza;
 
 CREATE TABLE IF NOT EXISTS limpieza.companies AS
     SELECT * FROM public.companies;
@@ -62,6 +64,7 @@ ALTER TABLE limpieza.companies ALTER COLUMN description TYPE VARCHAR(255);
 ALTER TABLE limpieza.companies ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
 ALTER TABLE limpieza.companies ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
 
+-- Elimina filas duplicadas de la tabla limpieza.companies, conservando solo una fila por cada combinación única de los campos especificados.
 DELETE FROM limpieza.companies
 WHERE ctid NOT IN (
   SELECT MIN(ctid)
@@ -70,7 +73,7 @@ WHERE ctid NOT IN (
 );
 
 DELETE FROM limpieza.companies
-WHERE ctid NOT IN (  
+WHERE ctid NOT IN (
   SELECT MIN(ctid)
   FROM limpieza.companies
   GROUP BY company_name, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, total_benefits
