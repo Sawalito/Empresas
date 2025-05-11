@@ -92,9 +92,10 @@ A continuación, se presenta una vista de los datos:
 | Accenture   | IT Services & Consulting, 1L+ empleados, 35 años | 4.0 | Company Culture, Skill Development / Learning, Job Security | - | 46.4k | 584.6k | 4.3k | 9.9k | 7.1k |
 | Cognizant   | IT Services & Consulting, Forbes Global 2000, 30 años | 3.9 | Skill Development / Learning | Promotions / Appraisal | 41.7k | 561.5k | 3.6k | 460 | 5.8k |
 
-Este dataset permite realizar análisis sobre tendencias del mercado laboral, identificar patrones de satisfacción entre empleados y comparar oportunidades laborales entre diferentes compañías. Su estructura facilita estudios sobre correlaciones entre calificación, salario y beneficios ofrecidos. 
+Este dataset permite realizar análisis sobre tendencias del mercado laboral, identificar patrones de satisfacción entre empleados y comparar oportunidades laborales entre diferentes compañías. Su estructura facilita estudios sobre correlaciones entre calificación, salario y beneficios ofrecidos.
 
 Para un análisis más profundo, sería útil limpiar y transformar ciertos atributos, como los valores de salarios expresados en formato de texto (`"3k"` en lugar de `3000`) y asegurar la homogeneidad en los aspectos valorados y criticados por empresa.
+
 ---
 
 ## **Instalación y Configuración**
@@ -144,10 +145,9 @@ SET CLIENT_ENCODING TO 'UTF8';
 
 ## Scripts SQL
 Estos scripts se encuentran en la carpeta "Ejecuta esto", estan divididos por secciones de acuerdo a la accion que hacen en la base de datos.
-
-2.`*01_data_cleaning.sql`: Crea un esquema `limpieza` y le copia los datos originales. Luego realiza la limpieza de datos, incluyendo la conversión de valores y eliminación de duplicados.
-3. `02_normalization.sql`: Lleva los datos hasta la Cuarta Forma Normal (4NF).
-4. `03_analysis.sql`: Contiene consultas analíticas y creación de atributos derivados.
+* `01_data_cleaning.sql`: Crea un esquema `limpieza` y le copia los datos originales. Luego realiza la limpieza de datos, incluyendo la conversión de valores y eliminación de duplicados.
+* `02_normalization.sql`: Lleva los datos hasta la Cuarta Forma Normal (4NF).
+* `03_analysis.sql`: Contiene consultas analíticas y creación de atributos derivados.
 
 En PostgreSQL puedes ejecutar los scripts con
 ```sql
