@@ -249,53 +249,46 @@ WHERE ctid NOT IN (
   GROUP BY company_name, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, total_benefits
 );
 ```
-Con estos pasos, los datos en el esquema `limpieza` están listos para su análisis y normalización.
+Con estos pasos, los datos en el esquema `limpieza` están listos para su normalización.
 
 ## Normalización de datos hasta cuarta formal normal
 
 El objetivo es llevar la base de datos hasta Cuarta Forma Normal (4NF).
+En esta etapa, los datos se migran al esquema `normalizacion` y posteriormente al esquema `final` para distinguir claramente las tablas normalizadas.
+
 Un problema inicial es que la tabla no contiene un identificador.
 
 ### Asignación de ID a la Tabla `companies`
 Primero, se añade una columna **`id`** a la tabla `companies`, asignando valores únicos a cada registro usando `ROW_NUMBER()` para garantizar una clave artificial.
 `ROW_NUMBER()` genera un índice incremental basado en `ctid`, permitiendo una identificación única.
 ```sql
---Ponerle un id a las nuevas columnas
-ALTER TABLE limpieza.companies 
+-- Normalización de la tabla companies
+-- Antes correr 01_create_schema.sql
+DROP SCHEMA IF EXISTS normalizacion CASCADE;
+
+CREATE SCHEMA IF NOT EXISTS normalizacion;
+
+CREATE TABLE IF NOT EXISTS normalizacion.companies AS
+    SELECT * FROM limpieza.companies;
+
+ALTER TABLE normalizacion.companies
 ADD COLUMN id INTEGER;
 
-UPDATE limpieza.companies
+UPDATE normalizacion.companies
 SET id = sub.row_num
 FROM (
   SELECT ctid, ROW_NUMBER() OVER (ORDER BY ctid) AS row_num
-  FROM limpieza.companies
+  FROM normalizacion.companies
 ) sub
-WHERE limpieza.companies.ctid = sub.ctid;
+WHERE normalizacion.companies.ctid = sub.ctid;
 
-ALTER TABLE limpieza.companies
+ALTER TABLE normalizacion.companies
 ALTER COLUMN id SET NOT NULL;
 
-ALTER TABLE limpieza.companies
+ALTER TABLE normalizacion.companies
 ADD CONSTRAINT pk_companies PRIMARY KEY (id);
 ```
 ---
-
-### Creación de una Secuencia para ID
-Se utiliza una **secuencia (`limpieza_companies_id_seq`)** para mantener la generación automática de identificadores en futuras inserciones.
-
-```sql
-DROP SEQUENCE IF EXISTS limpieza_companies_id_seq;
-CREATE SEQUENCE limpieza_companies_id_seq;
-
-SELECT setval('limpieza_companies_id_seq', (SELECT MAX(id) FROM limpieza.companies));
-
-ALTER TABLE limpieza.companies
-ALTER COLUMN id SET DEFAULT nextval('limpieza_companies_id_seq');
-
-SELECT * FROM limpieza.companies
-ORDER BY id;
-```
-
 
 ### Relvar Original (Tabla Companies)
 
@@ -368,9 +361,8 @@ Para cumplir con  1NF , descomponemos la columna `description` en una nueva tabl
 
 ```sql
 --Creacion de las tablas de descripcion
-
-DROP TABLE IF EXISTS limpieza.descriptions;
-CREATE TABLE limpieza.descriptions (
+DROP TABLE IF EXISTS normalizacion.descriptions;
+CREATE TABLE normalizacion.descriptions (
     id BIGSERIAL PRIMARY KEY,
     description TEXT UNIQUE,
     location TEXT,
@@ -390,7 +382,7 @@ Dado que `description` contiene múltiples valores en **formato texto**, se usa 
 - **Años de operación (`age`)**
 
 ```sql
-INSERT INTO limpieza.descriptions (
+INSERT INTO normalizacion.descriptions (
     description,
     location,
     industry,
@@ -401,86 +393,64 @@ INSERT INTO limpieza.descriptions (
 SELECT
     d.description,
 
-    -- Detectar ubicación como "City +N more"
-    CASE
-        WHEN d.description ~* '^[A-Za-z ]+\s+\+\d+\s+more$' THEN d.description
-        WHEN d.description LIKE '%+% more%' THEN NULL
-        ELSE NULL
-    END AS location,
+    -- Detectar ubicación como la última parte después del último '|'
+    TRIM(SPLIT_PART(d.description, '|', array_length(string_to_array(d.description, '|'), 1))) AS location,
 
-    -- Extraer industry
+    -- Extraer industry (primer campo antes del primer '|')
     CASE
         WHEN d.description LIKE '%|%' THEN TRIM(SPLIT_PART(d.description, '|', 1))
         ELSE NULL
     END AS industry,
 
-    -- Employees
+    -- Employees (campo que contiene 'employees')
     (
-        SELECT val FROM unnest(string_to_array(d.description, '|')) val
+        SELECT TRIM(val) FROM unnest(string_to_array(d.description, '|')) val
         WHERE val ILIKE '%employees%' LIMIT 1
     ) AS employees,
 
-    -- Company type
+    -- Company type: solo 'Public' o 'Private'
     (
-        SELECT val FROM unnest(string_to_array(d.description, '|')) val
-        WHERE val ILIKE 'public%' OR val ILIKE 'private%' LIMIT 1
+        SELECT
+            CASE
+                WHEN val ILIKE '%public%' THEN 'Public'
+                WHEN val ILIKE '%private%' THEN 'Private'
+                ELSE NULL
+            END
+        FROM unnest(string_to_array(d.description, '|')) val
+        WHERE val ILIKE '%public%' OR val ILIKE '%private%'
+        LIMIT 1
     ) AS company_type,
 
-    -- Age
+    -- Age (campo que contiene 'years old')
     (
-        SELECT val FROM unnest(string_to_array(d.description, '|')) val
+        SELECT TRIM(val) FROM unnest(string_to_array(d.description, '|')) val
         WHERE val ILIKE '%years old%' LIMIT 1
     ) AS age
 
 FROM (
     SELECT DISTINCT description
-    FROM limpieza.companies
+    FROM normalizacion.companies
     WHERE description IS NOT NULL
 ) d;
 ```
+Esto permite almacenar cada atributo en su **propia columna**.
 
-Esto permite almacenar cada atributo en su **propia columna**, facilitando análisis.
-
+Agregar una tabla pivote `companies_description`.
 ```sql
--- Actualiza la columna 'location' en la tabla 'descriptions'.
--- Extrae la última parte del atributo 'description' (separado por '|') como ubicación.
-UPDATE limpieza.descriptions
-SET location = TRIM(
-    SPLIT_PART(description, '|', array_length(string_to_array(description, '|'), 1))
-)
-WHERE description IS NOT NULL;
+DROP TABLE IF EXISTS normalizacion.companies_description;
+CREATE TABLE IF NOT EXISTS normalizacion.companies_description (
+    id BIGSERIAL PRIMARY KEY,
+    id_description BIGINT ,
+    id_companies BIGINT
+);
 
---Comprobacion
-SELECT * FROM  limpieza.descriptions ORDER BY id;
+INSERT INTO normalizacion.companies_description (id_description, id_companies)
+SELECT i.id, l.id
+FROM  normalizacion.descriptions i
+JOIN normalizacion.companies l ON i.description = l.description;
 
-SELECT * FROM limpieza.descriptions;
-
-SELECT COUNT(*) FROM limpieza.descriptions;
-
-SELECT COUNT(DISTINCT description) FROM limpieza.companies;
-```
-En la tabla companies cambiar `description` por 'descripcion_id'.
-```sql
--- Agregar columna de descripcion
-ALTER TABLE limpieza.companies
-ADD COLUMN descripcion_id BIGINT REFERENCES limpieza.descriptions(id);
-
-UPDATE limpieza.companies c
-SET descripcion_id = d.id
-FROM limpieza.descriptions d
-WHERE c.description = d.description;
-
-ALTER TABLE limpieza.descriptions 
-DROP COLUMN dsescription;
-
-SELECT * FROM limpieza.descriptions ORDER BY id;
-
-SELECT * FROM limpieza.companies;
-
--- CUIDADO: Eliminar la columna description de la tabla companies
-ALTER TABLE limpieza.companies 
-DROP COLUMN description;
-
+ALTER TABLE normalizacion.companies DROP COLUMN description;
+ALTER TABLE normalizacion.descriptions DROP COLUMN description;
 ```
 ---
 
@@ -503,135 +473,27 @@ Companies_Critically_Rated = { id, rating_value }
 
 
 ```sql
---LLevar a FN1
-DROP TABLE IF EXISTS limpieza.companies_fn1;
+--tablas parciales:
+DROP TABLE IF EXISTS normalizacion.companies_fn1;
+CREATE TABLE normalizacion.companies_fn1 AS
+SELECT c.*, r.rating_value
+FROM normalizacion.companies c
+LEFT JOIN LATERAL (
+    SELECT regexp_split_to_table(c.highly_rated_for, '\s*,\s*') AS rating_value
+) r ON true;
 
-CREATE TABLE limpieza.companies_fn1 AS
--- Filas con valores individuales de highly_rated_for
-SELECT
-    c.id,
-    c.company_name,
-    c.average_rating,
-    TRIM(value) AS rating_value,
-    c.critically_rated_for,
-    c.total_reviews,
-    c.average_salary,
-    c.total_interviews,
-    c.available_jobs,
-    c.total_benefits,
-    c.descripcion_id
-FROM limpieza.companies c,
-     LATERAL regexp_split_to_table(c.highly_rated_for, '\s*,\s*') AS value
+DROP TABLE IF EXISTS normalizacion.companies_fn2;
+CREATE TABLE normalizacion.companies_fn2 AS
+SELECT c.*, r.value
+FROM normalizacion.companies_fn1 c
+LEFT JOIN LATERAL (
+    SELECT regexp_split_to_table(c.critically_rated_for, '\s*,\s*') AS value
+) r ON true;
 
-UNION ALL
-
--- Fila única cuando highly_rated_for es NULL
-SELECT
-    c.id,
-    c.company_name,
-    c.average_rating,
-    NULL AS rating_value,
-    c.critically_rated_for,
-    c.total_reviews,
-    c.average_salary,
-    c.total_interviews,
-    c.available_jobs,
-    c.total_benefits,
-    c.descripcion_id
-FROM limpieza.companies c
-WHERE c.highly_rated_for IS NULL;
-
--- Agregar clave primaria a limpieza.companies_fn1
-ALTER TABLE limpieza.companies_fn1
-ADD CONSTRAINT pk_companies_fn1 PRIMARY KEY (id, rating_value);
-
-```
-
-Se aplica el mismo proceso para `critically_rated_for`.
-
-```sql
-DROP TABLE IF EXISTS limpieza.companies_fn2;
-CREATE TABLE limpieza.companies_fn2 AS
--- Descomposición de critically_rated_for
-SELECT
-    c.id,
-    c.company_name,
-    c.average_rating,
-    c.rating_value AS highly_rated_for_value,
-    TRIM(value) AS critically_rated_for_value,
-    c.total_reviews,
-    c.average_salary,
-    c.total_interviews,
-    c.available_jobs,
-    c.total_benefits,
-    c.descripcion_id
-FROM limpieza.companies_fn1 c,
-     LATERAL regexp_split_to_table(c.critically_rated_for, '\s*,\s*') AS value
-UNION ALL
--- Fila con NULL si critically_rated_for lo es
-SELECT
-    c.id,
-    c.company_name,
-    c.average_rating,
-    c.rating_value AS highly_rated_for_value,
-    NULL AS critically_rated_for_value,
-    c.total_reviews,
-    c.average_salary,
-    c.total_interviews,
-    c.available_jobs,
-    c.total_benefits,
-    c.descripcion_id
-FROM limpieza.companies_fn1 c
-WHERE c.critically_rated_for IS NULL;
-
--- Agregar clave primaria a limpieza.companies_fn2
-ALTER TABLE limpieza.companies_fn2
-ADD CONSTRAINT pk_companies_fn2 PRIMARY KEY (id, highly_rated_for_value, critically_rated_for_value);
-```
-```sql
-SELECT * FROM limpieza.companies_fn2 WHERE id = 66;
-
-SELECT * FROM limpieza.companies_fn2 ORDER BY id;
-
-SELECT * FROM limpieza.companies_fn1 ORDER BY id;
-
-SELECT * FROM limpieza.companies WHERE id = 66;
-```
-
----
-
-### Aplicación del Teorema de Heath (4NF)
-Se descompone la tabla final en múltiples entidades.
-La  última fase  de normalización consiste en  eliminar dependencias multivaluadas  en la base de datos utilizando el  Teorema de Heath . Esto nos permite dividir correctamente la información y generar relaciones claras sin redundancias.  
-
-Para evitar la repetición de información que se ha fragmentado en las otras relaciones, se genera una relación que almacena únicamente los atributos que dependen funcionalmente de la clave principal sin la información descompuesta.
-
-**Relvar Companies_Base (Información Esencial de Empresa):**
-```
-Companies_Base = { id, company_name, average_rating, total_reviews, average_salary, total_interviews, available_jobs, total_benefits }
-
-descripcion_id, companies_highly_rated_id, companies_critically_rated_id }
-
-{id} → { company_name, average_rating, total_reviews,  average_salary, total_interviews, available_jobs, total_benefits}
-
- descripcion_id, companies_highly_rated_id, companies_critically_rated_id }
-```
-
-
-Tablas finales después de 4NF:   
-- `companies_base`: Información esencial de cada empresa.  
-- `descriptions`: Atributos detallados por empresa.  
-- `companies_highly_rated`: Categorías positivas en empresas.  
-- `companies_critically_rated`: Categorías negativas en empresas.  
-- `companies_descripciones`: Relación entre empresas y su descripción.  
-
-```sql
---Teorema de Heath 4FN
-
--- Crear tabla companies_base con clave primaria
-DROP TABLE IF EXISTS limpieza.companies_base;
-CREATE TABLE limpieza.companies_base AS
-SELECT DISTINCT
+--por Teorema de Heath
+DROP TABLE IF EXISTS normalizacion.companies_4fn;
+CREATE TABLE normalizacion.companies_4fn AS
+    SELECT DISTINCT
     id,
     company_name,
     average_rating,
@@ -640,67 +502,81 @@ SELECT DISTINCT
     total_interviews,
     available_jobs,
     total_benefits
-FROM limpieza.companies_fn2;
+FROM normalizacion.companies_fn2;
 
--- Agregar clave primaria a companies_base
-ALTER TABLE limpieza.companies_base
-ADD CONSTRAINT pk_companies_base PRIMARY KEY (id);
+-- Agregar clave primaria a la tabla companies_4fn para permitir referencias foráneas
+ALTER TABLE normalizacion.companies_4fn
+ADD CONSTRAINT pk_companies_4fn PRIMARY KEY (id);
 
--- Crear tabla companies_descripciones con clave primaria y foránea
-DROP TABLE IF EXISTS limpieza.companies_descripciones;
-CREATE TABLE limpieza.companies_descripciones AS
+DROP TABLE IF EXISTS normalizacion.companies_highly_rated;
+CREATE TABLE normalizacion.companies_highly_rated (
+    id BIGSERIAL PRIMARY KEY,
+    id_company BIGINT,
+    rating_value VARCHAR(100)
+);
+
+INSERT INTO normalizacion.companies_highly_rated (id_company,rating_value)
 SELECT DISTINCT
     id,
-    descripcion_id
-FROM limpieza.companies_fn2
-WHERE descripcion_id IS NOT NULL;
+    rating_value
+FROM normalizacion.companies_fn2
+WHERE rating_value IS NOT NULL;
 
--- Agregar clave primaria y clave foránea a companies_descripciones
-ALTER TABLE limpieza.companies_descripciones
-ADD CONSTRAINT pk_companies_descripciones PRIMARY KEY (id, descripcion_id),
-ADD CONSTRAINT fk_companies_descripciones FOREIGN KEY (descripcion_id) REFERENCES limpieza.descriptions (id);
+DROP TABLE IF EXISTS normalizacion.companies_critically_rated;
+CREATE TABLE normalizacion.companies_critically_rated (
+    id BIGSERIAL PRIMARY KEY,
+    id_company BIGINT,
+    value VARCHAR(100)
+);
 
--- Crear tabla companies_highly_rated con clave primaria
-DROP TABLE IF EXISTS limpieza.companies_highly_rated;
-CREATE TABLE limpieza.companies_highly_rated AS
+INSERT INTO normalizacion.companies_critically_rated(id_company,value)
 SELECT DISTINCT
     id,
-    highly_rated_for_value AS rating_value
-FROM limpieza.companies_fn2
-WHERE highly_rated_for_value IS NOT NULL;
+    value
+FROM normalizacion.companies_fn2;
 
--- Agregar clave primaria a companies_highly_rated
-ALTER TABLE limpieza.companies_highly_rated
-ADD CONSTRAINT pk_companies_highly_rated PRIMARY KEY (id, rating_value);
 
--- Crear tabla companies_critically_rated con clave primaria
-DROP TABLE IF EXISTS limpieza.companies_critically_rated;
-CREATE TABLE limpieza.companies_critically_rated AS
-SELECT DISTINCT
-    id,
-    critically_rated_for_value AS rating_value
-FROM limpieza.companies_fn2
-WHERE critically_rated_for_value IS NOT NULL;
 
--- Agregar clave primaria a companies_critically_rated
-ALTER TABLE limpieza.companies_critically_rated
-ADD CONSTRAINT pk_companies_critically_rated PRIMARY KEY (id, rating_value);
+-- Llaves foráneas para mantener integridad referencial
+-- companies_description: referencia a descriptions y companies_4fn
+ALTER TABLE normalizacion.companies_description
+ADD CONSTRAINT fk_companies_description_description
+  FOREIGN KEY (id_description) REFERENCES normalizacion.descriptions(id)
+  ON DELETE CASCADE,
+ADD CONSTRAINT fk_companies_description_company
+  FOREIGN KEY (id_companies) REFERENCES normalizacion.companies_4fn(id)
+  ON DELETE CASCADE;
 
--- Verificar las tablas
-SELECT * FROM limpieza.companies_base;
-SELECT * FROM limpieza.companies_descripciones ORDER BY id;
-SELECT * FROM limpieza.companies_highly_rated ORDER BY id;
-SELECT * FROM limpieza.companies_critically_rated ORDER BY id;
+-- companies_highly_rated: referencia a companies_4fn
+ALTER TABLE normalizacion.companies_highly_rated
+ADD CONSTRAINT fk_highly_rated_company
+  FOREIGN KEY (id_company) REFERENCES normalizacion.companies_4fn(id)
+  ON DELETE CASCADE;
+
+-- companies_critically_rated: referencia a companies_4fn
+ALTER TABLE normalizacion.companies_critically_rated
+ADD CONSTRAINT fk_critically_rated_company
+  FOREIGN KEY (id_company) REFERENCES normalizacion.companies_4fn(id)
+  ON DELETE CASCADE;
+
 ```
 Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4NF**.
 
-Crear un esquema final para las tablas normalizadas y moverlas allí.
-```sql
-CREATE SCHEMA final;
+### Migración al esquema final
 
-ALTER TABLE limpieza.companies_base SET SCHEMA final;
-ALTER TABLE limpieza.companies_descripciones SET SCHEMA final;
-ALTER TABLE limpieza.companies_highly_rated SET SCHEMA final;
-ALTER TABLE limpieza.companies_critically_rated SET SCHEMA final;
+Para distinguir las tablas normalizadas, se migran al esquema `final`:
+
+```sql
+CREATE SCHEMA IF NOT EXISTS final;
+
+ALTER TABLE normalizacion.companies_4fn SET SCHEMA final;
+ALTER TABLE normalizacion.descriptions SET SCHEMA final;
+ALTER TABLE normalizacion.companies_highly_rated SET SCHEMA final;
+ALTER TABLE normalizacion.companies_critically_rated SET SCHEMA final;
+ALTER TABLE normalizacion.companies_description SET SCHEMA final;
 ```
----
+## Diagrama Entidad-Relación (ERD)
+
+A continuación se muestra el diagrama Entidad-Relación (ERD) que representa la estructura final de la base de datos tras la normalización:
+
+![Diagrama ERD](./images/erd.png)

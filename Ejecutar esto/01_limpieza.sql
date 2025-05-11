@@ -1,3 +1,4 @@
+--limpieza de datos
 DROP SCHEMA IF EXISTS limpieza CASCADE;
 
 CREATE SCHEMA IF NOT EXISTS limpieza;
