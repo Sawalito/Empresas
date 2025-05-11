@@ -4,7 +4,20 @@
 - Natalia Quintana
 - Silvestre Rosales
 - Saúl Rojas
-### 
+
+### Análisis Preliminar del Dataset de Empresas
+A continuación, se presenta una vista de los datos:
+
+| **Empresa**   | **Descripción** | **Calificación** | **Aspectos Valorados** | **Aspectos Criticados** | **Total Reseñas** | **Salario Promedio** | **Entrevistas** | **Trabajos Disponibles** | **Beneficios** |
+|--------------|---------------|----------------|----------------------|----------------------|----------------|----------------|------------|---------------------|------------|
+| TCS         | IT Services & Consulting, 1L+ empleados, 56 años | 3.8 | Job Security, Work Life Balance | Promotions / Appraisal, Salary & Benefits | 73.1k | 856.9k | 6.1k | 847 | 11.5k |
+| Accenture   | IT Services & Consulting, 1L+ empleados, 35 años | 4.0 | Company Culture, Skill Development / Learning, Job Security | - | 46.4k | 584.6k | 4.3k | 9.9k | 7.1k |
+| Cognizant   | IT Services & Consulting, Forbes Global 2000, 30 años | 3.9 | Skill Development / Learning | Promotions / Appraisal | 41.7k | 561.5k | 3.6k | 460 | 5.8k |
+
+Este dataset permite realizar análisis sobre tendencias del mercado laboral, identificar patrones de satisfacción entre empleados y comparar oportunidades laborales entre diferentes compañías. Su estructura facilita estudios sobre correlaciones entre calificación, salario y beneficios ofrecidos.
+
+Para un análisis más profundo, sería útil limpiar y transformar ciertos atributos, como los valores de salarios expresados en formato de texto (`"3k"` en lugar de `3000`) y asegurar la homogeneidad en los aspectos valorados y criticados por empresa.
+
 
 ### **Instrucciones para psql**
 
@@ -16,7 +29,7 @@ CREATE DATABASE top_companies;
 
 **\--  Conectarse al database**
 ```sql
-\\c top_companies;
+\c top_companies;
 ```
 
 **\-- Borrar y crear tabla**
@@ -48,83 +61,91 @@ SET CLIENT_ENCODING TO 'UTF8';
 
 **\-- Ingresar a TablePlus y conectarse a la base de datos “top_companies”**
 
+**Script SQL `01_limpieza.sql`**
 
-**Código SQL para limpiar y convertir columnas a sus tipos de datos respectivos para poderse analizar** 
+### Limpieza y Conversión de Datos
 
-– El siguiente código convierte los valores de 2.5k a 2500 para poder ser analizados como números. Esto se hace para total_reviews, average_salary, total_interviews y available_jobs. 
+Para garantizar la integridad y consistencia de los datos, se realizaron los siguientes pasos de limpieza y conversión en el esquema `limpieza`:
+
+#### Creación del Esquema y Copia de Datos
+Se creó un esquema `limpieza` para separar los datos originales de los procesados:
 ```sql
-UPDATE companies SET total_reviews = (  
-  CASE  
-    WHEN total_reviews ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(total_reviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
-    WHEN total_reviews = '--' OR total_reviews IS NULL THEN NULL  
-    ELSE total_reviews  
-  END  
-);
+CREATE SCHEMA limpieza;
 
-UPDATE companies SET average_salary = (  
-  CASE  
-    WHEN average_salary ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(average_salary), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
-    WHEN average_salary = '--' OR average_salary IS NULL THEN NULL  
-    ELSE average_salary  
-  END  
-);
-
-UPDATE companies SET total_interviews = (  
-  CASE  
-    WHEN total_interviews ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(total_interviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
-    WHEN total_interviews = '--' OR total_interviews IS NULL THEN NULL  
-    ELSE total_interviews  
-  END  
-);
-
-UPDATE companies SET available_jobs = (  
-  CASE  
-    WHEN available_jobs ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(available_jobs), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
-    WHEN available_jobs = '--' OR available_jobs IS NULL THEN NULL  
-    ELSE available_jobs  
-  END  
-);
-
-UPDATE companies SET total_benefits = (  
-  CASE  
-    WHEN total_benefits ILIKE '%k' THEN  
-      (CAST(REPLACE(LOWER(total_benefits), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT  
-    WHEN total_benefits = '--' OR total_benefits IS NULL THEN NULL  
-    ELSE total_benefits  
-  END  
-);
-```
-\-- Una vez modificados los datos, podemos cambiar el tipo de dato en la tabla para guardar mas espacio y ser mas eficientes
-```sql
-ALTER TABLE companies ALTER COLUMN total_reviews TYPE BIGINT USING total_reviews::BIGINT;
-
-ALTER TABLE companies ALTER COLUMN average_salary TYPE BIGINT USING average_salary::BIGINT;
-
-ALTER TABLE companies ALTER COLUMN total_interviews TYPE BIGINT USING total_interviews::BIGINT;
-
-ALTER TABLE companies ALTER COLUMN available_jobs TYPE BIGINT USING available_jobs::BIGINT;
-
-ALTER TABLE companies ALTER COLUMN total_benefits TYPE BIGINT USING total_benefits::BIGINT;
-
-ALTER TABLE companies  ALTER COLUMN company_name TYPE VARCHAR(255);
-
-ALTER TABLE companies  ALTER COLUMN description TYPE VARCHAR(255);
-
-ALTER TABLE companies  ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
-
-ALTER TABLE companies  ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
+CREATE TABLE IF NOT EXISTS limpieza.companies AS
+  SELECT * FROM public.companies;
 ```
 
-**Consultas utilizadas para analizar los datos**
+#### Conversión de Valores con Sufijo "k" y "--" a Números Enteros o NULL
+Se procesaron las columnas `total_reviews`, `average_salary`, `total_interviews`, `available_jobs` y `total_benefits` para convertir valores con sufijo "k" a números enteros y reemplazar valores "--" con `NULL`:
+```sql
+UPDATE limpieza.companies SET total_reviews = (
+  CASE
+  WHEN total_reviews ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(total_reviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN total_reviews = '--' OR total_reviews IS NULL THEN NULL
+  ELSE total_reviews
+  END
+);
+
+UPDATE limpieza.companies SET average_salary = (
+  CASE
+  WHEN average_salary ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(average_salary), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN average_salary = '--' OR average_salary IS NULL THEN NULL
+  ELSE average_salary
+  END
+);
+
+UPDATE limpieza.companies SET total_interviews = (
+  CASE
+  WHEN total_interviews ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(total_interviews), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN total_interviews = '--' OR total_interviews IS NULL THEN NULL
+  ELSE total_interviews
+  END
+);
+
+UPDATE limpieza.companies SET available_jobs = (
+  CASE
+  WHEN available_jobs ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(available_jobs), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN available_jobs = '--' OR available_jobs IS NULL THEN NULL
+  ELSE available_jobs
+  END
+);
+
+UPDATE limpieza.companies SET total_benefits = (
+  CASE
+  WHEN total_benefits ILIKE '%k' THEN
+    (CAST(REPLACE(LOWER(total_benefits), 'k', '') AS NUMERIC) * 1000)::BIGINT::TEXT
+  WHEN total_benefits = '--' OR total_benefits IS NULL THEN NULL
+  ELSE total_benefits
+  END
+);
+```
+
+#### Modificación del Tipo de Datos
+Se ajustaron los tipos de datos de las columnas para reflejar los cambios realizados:
+```sql
+ALTER TABLE limpieza.companies ALTER COLUMN total_reviews TYPE BIGINT USING total_reviews::BIGINT;
+ALTER TABLE limpieza.companies ALTER COLUMN average_salary TYPE BIGINT USING average_salary::BIGINT;
+ALTER TABLE limpieza.companies ALTER COLUMN total_interviews TYPE BIGINT USING total_interviews::BIGINT;
+ALTER TABLE limpieza.companies ALTER COLUMN available_jobs TYPE BIGINT USING available_jobs::BIGINT;
+ALTER TABLE limpieza.companies ALTER COLUMN total_benefits TYPE BIGINT USING total_benefits::BIGINT;
+
+ALTER TABLE limpieza.companies ALTER COLUMN company_name TYPE VARCHAR(255);
+ALTER TABLE limpieza.companies ALTER COLUMN description TYPE VARCHAR(255);
+ALTER TABLE limpieza.companies ALTER COLUMN highly_rated_for TYPE VARCHAR(255);
+ALTER TABLE limpieza.companies ALTER COLUMN critically_rated_for TYPE VARCHAR(255);
+```
+
+
+**Consultas  para analizar los datos**
 
 * **¿Existen columnas con valores únicos?**  
   * No, pero si deberían de ser ya que hay algunas tuplas repetidas, el siguiente codigo ayuda a deshacerse de dichas tuplas repetidas   
     
-
 \-- Cuenta la cantidad de compañías distintas asumiendo que si dos se llaman igual, son la misma compañía. Regresa 9355
 ```sql
 SELECT COUNT(DISTINCT(company_name))  
