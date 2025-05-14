@@ -83,6 +83,12 @@ El objetivo de este conjunto de datos es proporcionar información detallada sob
 * Evitar discriminación: **Asegurar que el análisis no refuerce sesgos en la contratación o evaluación de empresas en función de factores como ubicación, industria o tamaño.**
 * Impacto en el mercado laboral: Considerar cómo la difusión de estos análisis podría influir en decisiones de contratación, salarios y beneficios, evitando afectar negativamente a empresas o empleados.
 
+
+Además, para enriquecer el análisis geográfico, se añadió una tabla de ciudades (`locations`) con coordenadas (latitud y longitud) asociadas a la ubicación de cada empresa.  
+El archivo `city_coordinates.csv` contiene las coordenadas de las ciudades y está incluido en el repositorio.
+Este csv se obtuvo usando Nominatim para geolocalizar las ciudades y un query en la tabla companies de las ubicaciones de las empresas despues de limpiarlo.
+
+
 ### Análisis Preliminar del Dataset de Empresas
 A continuación, se presenta una vista de los datos:
 
@@ -140,8 +146,21 @@ CREATE TABLE companies (
 ⚠️ IMPORTANTE: Antes de ejecutar este comando, cambia la dirección del archivo CSV en tu sistema.
 ```sql
 SET CLIENT_ENCODING TO 'UTF8';
+-- cambia la ruta
+\copy companies FROM 'C:/Users/HP/Documents/GitHub/Empresas/companies.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',');
+```
+### Importar coordenadas de ciudades
 
-\copy companies FROM 'C:/Users/Light 16 Pro/Downloads/companies.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',');
+Crea la tabla temporal y luego importa el archivo `city_coordinates.csv`:
+
+```sql
+CREATE TABLE city_coordinates_temp (
+  city TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION
+);
+-- cambia la ruta
+\copy city_coordinates_temp(city,latitude,longitude) FROM 'C:/Users/HP/Documents/GitHub/Empresas/city_coordinates.csv' WITH (FORMAT CSV, HEADER true, DELIMITER ',');
 ```
 
 ## Scripts SQL
@@ -319,7 +338,7 @@ Dado que los campos `highly_rated_for` y `critically_rated_for` contienen múlti
 
 ### Problema en la estructura de datos inicial
 
-El campo `description` en la tabla original contiene una cadena compuesta de varios atributos como ubicación, industria, número de empleados, tipo de empresa y años de operación. Para cumplir 1NF, se extrajo esta información a una nueva relvar.
+El campo `description` en la tabla original contiene una cadena compuesta de varios atributos como ubicación, industria, número de empleados, tipo de empresa y años de operación. Para cumplir 1NF, se extrajo esta información a una nueva relvar `Descriptions`.
 
 **Encabezado de la relvar:**
 
@@ -435,8 +454,54 @@ FROM (
 ) d;
 ```
 Esto permite almacenar cada atributo en su **propia columna**.
+---
+Enriquecimiento de la base de datos con location: latitud y longitud.
+  - Se crea la tabla `normalizacion.locations` con todas las ciudades únicas.
+  - Se actualizan las coordenadas de cada ciudad usando el archivo `city_coordinates.csv`.
+  - Update a la tabla `normalizacion.descriptions`, que ahora contiene una clave foránea `id_city` que referencia a la tabla `locations` (en vez de almacenar el nombre de la ciudad como texto).
 
-Agregar una tabla pivote `companies_description`.
+```sql
+UPDATE normalizacion.descriptions
+SET location = REGEXP_REPLACE(location, '\s*\+\d+\s*more', '', 'gi');
+
+
+CREATE TABLE IF NOT EXISTS normalizacion.locations (
+    id BIGSERIAL PRIMARY KEY,
+    city VARCHAR(255),
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION
+);
+
+SELECT*FROM normalizacion.locations;
+
+INSERT INTO normalizacion.locations (city)
+SELECT DISTINCT location FROM normalizacion.descriptions;
+
+ALTER TABLE normalizacion.descriptions ADD COLUMN id_city BIGINT REFERENCES normalizacion.locations (id);
+
+UPDATE normalizacion.descriptions
+    SET id_city = (SELECT id
+                   FROM normalizacion.locations
+                   WHERE city = location)
+WHERE id_city is NULL;
+
+CREATE TABLE IF NOT EXISTS city_coordinates_temp (
+  city TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION
+);
+
+UPDATE normalizacion.locations l
+SET
+  latitude = c.latitude,
+  longitude = c.longitude
+FROM city_coordinates_temp c
+WHERE l.city=c.city;
+```
+---
+
+Agregar una tabla pivote `companies_description` para relacionar empresas y descripciones.
+
 ```sql
 DROP TABLE IF EXISTS normalizacion.companies_description;
 CREATE TABLE IF NOT EXISTS normalizacion.companies_description (
@@ -535,9 +600,12 @@ SELECT DISTINCT
     id,
     value
 FROM normalizacion.companies_fn2;
+```
+---
+Se agregan claves foráneas para asegurar la integridad entre empresas, descripciones, ubicaciones y aspectos valorados/criticados.
 
 
-
+```sql
 -- Llaves foráneas para mantener integridad referencial
 -- companies_description: referencia a descriptions y companies_4fn
 ALTER TABLE normalizacion.companies_description

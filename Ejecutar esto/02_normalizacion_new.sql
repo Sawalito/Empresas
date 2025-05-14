@@ -141,6 +141,7 @@ JOIN normalizacion.companies l ON i.description = l.description;
 ALTER TABLE normalizacion.companies DROP COLUMN description;
 ALTER TABLE normalizacion.descriptions DROP COLUMN description;
 
+-- Normalización de la tabla companies
 
 --tablas parciales:
 DROP TABLE IF EXISTS normalizacion.companies_fn1;
