@@ -28,6 +28,14 @@ Fue recopilado por Vedant Khapekar. La fuente original de los datos proviene de 
 
 El dataset original está disponible en [Kaggle](https://www.kaggle.com/datasets/vedantkhapekar/top-10000-companies-dataset). No se actualiza, aunque los datos cambien en Ambition Box.
 
+El objetivo de este conjunto de datos es proporcionar información detallada sobre las principales 10,000 empresas, permitiendo analizar factores clave del mercado laboral. El equipo lo utilizará para:
+
+* Evaluar las opiniones de los empleados sobre sus empresas.  
+* Identificar los aspectos más valorados y criticados en las compañías.  
+* Analizar factores que influyen en la calificación de una empresa.  
+* Comparar salarios y oportunidades laborales entre empresas.  
+* Estudiar tendencias en el mercado laboral, como la demanda de talento y los beneficios ofrecidos.
+
 ### **Atributos del Dataset**
 En este conjunto de datos hay 10 000 tuplas que contienen informacion de 10 000 empresas, con 10 atributos que permiten realizar un análisis profundo del mercado laboral.
 Cada atributo tiene el siguiete significado de acuerdo a la pagina de origen.
