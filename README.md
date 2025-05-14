@@ -957,6 +957,8 @@ CREATE VIEW antartida AS
 SELECT * FROM vista_companies_continente
 WHERE continent ILIKE 'Antártida';
 ```
+(...)
+
 
 
 
