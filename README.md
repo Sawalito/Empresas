@@ -956,15 +956,6 @@ WHERE continent ILIKE 'Antártida';
 
 
 
-
-
-
-
-
-
-
-
-
 ### Analizar salarios y oportunidades laborales entre empresas
 #### Top 5 empresas con mejor salario promedio
 ```sql
