@@ -339,7 +339,8 @@ Dado que los campos `highly_rated_for` y `critically_rated_for` contienen múlti
 
 ### Problema en la estructura de datos inicial
 
-El campo `description` en la tabla original contiene una cadena compuesta de varios atributos como ubicación, industria, número de empleados, tipo de empresa y años de operación. Para cumplir 1NF, se extrajo esta información a una nueva relvar `Descriptions`.
+El campo `description` en la tabla original contiene una cadena compuesta de varios atributos como ubicación, industria, número de empleados, tipo de empresa y años de operación. 
+Para cumplir 1NF, se extrajo esta información a una nueva relvar `Descriptions`.
 
 **Encabezado de la relvar:**
 
@@ -501,23 +502,26 @@ WHERE l.city=c.city;
 ```
 ---
 
-Agregar una tabla pivote `companies_description` para relacionar empresas y descripciones.
+Relacionar empresas y descripciones.
 
 ```sql
-DROP TABLE IF EXISTS normalizacion.companies_description;
-CREATE TABLE IF NOT EXISTS normalizacion.companies_description (
-    id BIGSERIAL PRIMARY KEY,
-    id_description BIGINT ,
-    id_companies BIGINT
-);
+-- Agrega la columna id_description a companies
+ALTER TABLE normalizacion.companies ADD COLUMN id_description BIGINT;
 
-INSERT INTO normalizacion.companies_description (id_description, id_companies)
-SELECT i.id, l.id
-FROM  normalizacion.descriptions i
-JOIN normalizacion.companies l ON i.description = l.description;
+-- Actualiza id_description con el id correspondiente de descriptions
+UPDATE normalizacion.companies c
+SET id_description = d.id
+FROM normalizacion.descriptions d
+WHERE c.description = d.description;
 
+-- (Opcional pero recomendable) Elimina la columna description de companies
 ALTER TABLE normalizacion.companies DROP COLUMN description;
-ALTER TABLE normalizacion.descriptions DROP COLUMN description;
+
+-- Agrega la clave foránea
+ALTER TABLE normalizacion.companies
+ADD CONSTRAINT fk_companies_description
+FOREIGN KEY (id_description) REFERENCES normalizacion.descriptions(id)
+ON DELETE SET NULL;
 ```
 ---
 
@@ -608,14 +612,6 @@ Se agregan claves foráneas para asegurar la integridad entre empresas, descripc
 
 ```sql
 -- Llaves foráneas para mantener integridad referencial
--- companies_description: referencia a descriptions y companies_4fn
-ALTER TABLE normalizacion.companies_description
-ADD CONSTRAINT fk_companies_description_description
-  FOREIGN KEY (id_description) REFERENCES normalizacion.descriptions(id)
-  ON DELETE CASCADE,
-ADD CONSTRAINT fk_companies_description_company
-  FOREIGN KEY (id_companies) REFERENCES normalizacion.companies_4fn(id)
-  ON DELETE CASCADE;
 
 -- companies_highly_rated: referencia a companies_4fn
 ALTER TABLE normalizacion.companies_highly_rated
@@ -655,7 +651,6 @@ ALTER TABLE normalizacion.companies_4fn SET SCHEMA final;
 ALTER TABLE normalizacion.descriptions SET SCHEMA final;
 ALTER TABLE normalizacion.companies_highly_rated SET SCHEMA final;
 ALTER TABLE normalizacion.companies_critically_rated SET SCHEMA final;
-ALTER TABLE normalizacion.companies_description SET SCHEMA final;
 ALTER TABLE normalizacion.locations SET SCHEMA final;
 
 ```

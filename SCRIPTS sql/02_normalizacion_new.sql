@@ -88,9 +88,26 @@ FROM (
     WHERE description IS NOT NULL
 ) d;
 
+--agregar comcolumna a companies llamada description_id
+ALTER TABLE normalizacion.companies
+ADD COLUMN description_id BIGINT;
+
+--hacer la consulta correlacionada para llenar la columna description_id
+UPDATE normalizacion.companies
+SET description_id = (
+    SELECT id
+    FROM normalizacion.descriptions
+    WHERE description = normalizacion.companies.description
+);
+
+ALTER TABLE normalizacion.companies DROP COLUMN description;
+ALTER TABLE normalizacion.descriptions DROP COLUMN description;
+
+-- Agrega la clave foránea
+ALTER TABLE normalizacion.companies ADD CONSTRAINT fk_companies_description FOREIGN KEY (description_id) REFERENCES normalizacion.descriptions(id) ON DELETE SET NULL;
+
 UPDATE normalizacion.descriptions
 SET location = REGEXP_REPLACE(location, '\s*\+\d+\s*more', '', 'gi');
-
 
 CREATE TABLE IF NOT EXISTS normalizacion.locations (
     id BIGSERIAL PRIMARY KEY,
@@ -125,21 +142,6 @@ SET
 FROM city_coordinates_temp c
 WHERE l.city=c.city;
 
---companies_description
-DROP TABLE IF EXISTS normalizacion.companies_description;
-CREATE TABLE IF NOT EXISTS normalizacion.companies_description (
-    id BIGSERIAL PRIMARY KEY,
-    id_description BIGINT ,
-    id_companies BIGINT
-);
-
-INSERT INTO normalizacion.companies_description (id_description, id_companies)
-SELECT i.id, l.id
-FROM  normalizacion.descriptions i
-JOIN normalizacion.companies l ON i.description = l.description;
-
-ALTER TABLE normalizacion.companies DROP COLUMN description;
-ALTER TABLE normalizacion.descriptions DROP COLUMN description;
 
 -- Normalización de la tabla companies
 
@@ -170,7 +172,8 @@ CREATE TABLE normalizacion.companies_4fn AS
     average_salary,
     total_interviews,
     available_jobs,
-    total_benefits
+    total_benefits,
+    description_id
 FROM normalizacion.companies_fn2;
 
 -- Agregar clave primaria a la tabla companies_4fn para permitir referencias foráneas
@@ -206,14 +209,6 @@ FROM normalizacion.companies_fn2;
 
 
 -- Llaves foráneas para mantener integridad referencial
--- companies_description: referencia a descriptions y companies_4fn
-ALTER TABLE normalizacion.companies_description
-ADD CONSTRAINT fk_companies_description_description
-  FOREIGN KEY (id_description) REFERENCES normalizacion.descriptions(id)
-  ON DELETE CASCADE,
-ADD CONSTRAINT fk_companies_description_company
-  FOREIGN KEY (id_companies) REFERENCES normalizacion.companies_4fn(id)
-  ON DELETE CASCADE;
 
 -- companies_highly_rated: referencia a companies_4fn
 ALTER TABLE normalizacion.companies_highly_rated
@@ -247,7 +242,6 @@ ALTER TABLE normalizacion.companies_4fn SET SCHEMA final;
 ALTER TABLE normalizacion.descriptions SET SCHEMA final;
 ALTER TABLE normalizacion.companies_highly_rated SET SCHEMA final;
 ALTER TABLE normalizacion.companies_critically_rated SET SCHEMA final;
-ALTER TABLE normalizacion.companies_description SET SCHEMA final;
 ALTER TABLE normalizacion.locations SET SCHEMA final;
 
 
