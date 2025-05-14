@@ -87,7 +87,7 @@ El objetivo de este conjunto de datos es proporcionar información detallada sob
 
 Además, para enriquecer el análisis geográfico, se añadió una tabla de ciudades (`locations`) con coordenadas (latitud y longitud) asociadas a la ubicación de cada empresa.  
 El archivo `city_coordinates.csv` contiene las coordenadas de las ciudades y está incluido en el repositorio.
-Este csv se obtuvo usando Nominatim para geolocalizar las ciudades y un query en la tabla companies de las ubicaciones de las empresas despues de limpiarlo y con un rating mayor a 4.
+Este csv se obtuvo usando Nominatim para geolocalizar las ciudades y un query en la tabla companies de las ubicaciones donde hay empresas despues de limpiarlo y con un rating mayor a 4.
 
 
 ### Análisis Preliminar del Dataset de Empresas
@@ -680,7 +680,6 @@ FROM final.companies_4fn
 GROUP BY average_rating
 ORDER BY average_rating DESC;
 ```
-|
 ![CHART](./images/chart.png)
 
 Se pueden hacer estadísticas descriptivas de las calificaciones
@@ -870,6 +869,104 @@ LIMIT 10;
 
 Estos son los beneficios más comunes en empresas con calificación promedio superior a 4.
 Estos beneficios pueden ser factores clave para una buena percepción de la empresa.
+
+## Vista ciudades continente
+Enriqueciendo los datos con coordenadas:
+![MAP](./images/map.png)
+
+Script `04_analysis.sql`
+
+```sql
+DROP VIEW IF EXISTS vista_ciudades_continente CASCADE ;
+CREATE VIEW vista_ciudades_continente AS
+SELECT
+    id,
+    city,
+    latitude,
+    longitude,
+    CASE
+        WHEN latitude BETWEEN -35 AND 37 AND longitude BETWEEN -10 AND 60 THEN 'Europa'
+        WHEN latitude BETWEEN -35 AND 35 AND longitude BETWEEN -20 AND 55 THEN 'África'
+        WHEN latitude BETWEEN 5 AND 80 AND longitude BETWEEN 60 AND 180 THEN 'Asia'
+        WHEN latitude BETWEEN -55 AND 15 AND longitude BETWEEN -80 AND -35 THEN 'Sudamérica'
+        WHEN latitude BETWEEN 15 AND 75 AND longitude BETWEEN -170 AND -50 THEN 'Norteamérica'
+        WHEN latitude BETWEEN -50 AND 0 AND longitude BETWEEN 110 AND 180 THEN 'Oceanía'
+        WHEN latitude < -60 THEN 'Antártida'
+        ELSE 'Desconocido'
+    END AS continente
+FROM final.locations;
+
+DROP VIEW IF EXISTS vista_companies_continente CASCADE;
+CREATE VIEW vista_companies_continente AS
+SELECT
+    cm.*,
+    cc.continente AS continent,
+    cc.city AS city,
+    d.age AS age,
+    d.company_type AS company_type,
+    d.industry
+FROM vista_ciudades_continente cc
+JOIN final.descriptions d
+ON d.id_city = cc.id
+JOIN final.companies_description cd
+ON d.id = cd.id_description
+JOIN final.companies_4fn cm
+ON cd.id_companies = cm.id;
+
+SELECT * FROM final.companies_highly_rated;
+
+-- Europa
+DROP VIEW IF EXISTS europa;
+CREATE VIEW europa AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Europa';
+
+-- África
+DROP VIEW IF EXISTS africa;
+CREATE VIEW africa AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'África';
+
+-- Asia
+DROP VIEW IF EXISTS asia;
+CREATE VIEW asia AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Asia';
+
+-- Sudamérica
+DROP VIEW IF EXISTS sudamerica;
+CREATE VIEW sudamerica AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Sudamérica';
+
+-- Norteamérica
+DROP VIEW IF EXISTS norteamerica;
+CREATE VIEW norteamerica AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Norteamérica';
+
+-- Oceanía
+DROP VIEW IF EXISTS oceania;
+CREATE VIEW oceania AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Oceanía';
+
+-- Antártida
+DROP VIEW IF EXISTS antartida;
+CREATE VIEW antartida AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Antártida';
+```
+
+
+
+
+
+
+
+
+
+
 
 ### Analizar salarios y oportunidades laborales entre empresas
 #### Top 5 empresas con mejor salario promedio

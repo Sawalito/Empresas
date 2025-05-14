@@ -1,5 +1,4 @@
-DROP VIEW IF EXISTS vista_ciudades_continente;
-
+DROP VIEW IF EXISTS vista_ciudades_continente CASCADE ;
 CREATE VIEW vista_ciudades_continente AS
 SELECT
     id,
@@ -19,7 +18,6 @@ SELECT
 FROM final.locations;
 
 DROP VIEW IF EXISTS vista_companies_continente CASCADE;
-
 CREATE VIEW vista_companies_continente AS
 SELECT
     cm.*,
@@ -80,13 +78,16 @@ CREATE VIEW antartida AS
 SELECT * FROM vista_companies_continente
 WHERE continent ILIKE 'Antártida';
 
+
+
 --Tipo de industria y cantidad de empresas de esa industria para Norteamerica
 SELECT
     DISTINCT industry,
     COUNT(industry)
 FROM norteamerica
 GROUP BY industry
-ORDER BY COUNT(industry) DESC;
+ORDER BY COUNT(industry) DESC
+LIMIT 10;
 
 SELECT * FROM norteamerica
 WHERE industry ILIKE 'IT Services & Consulting' ORDER BY average_rating DESC;
