@@ -23,6 +23,28 @@ SELECT ROUND(AVG(average_rating)::numeric, 3)                                   
               LIMIT 1))                                                                AS moda
 FROM final.companies_4fn;
 
+-- Distribuvion de salarios promedio (average_salary)
+SELECT
+    total_benefits,
+    COUNT(*) AS num_empresas,
+    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS porcentaje
+FROM final.companies_4fn
+GROUP BY total_benefits
+ORDER BY total_benefits DESC;
+
+SELECT
+    ROUND(AVG(average_salary)::numeric, 3) AS media,
+    ROUND(VAR_SAMP(average_salary)::numeric, 3) AS varianza,
+    ROUND(STDDEV_SAMP(average_salary)::numeric, 3) AS desviacion,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY average_salary) AS mediana,
+    ---moda
+    (SELECT average_salary
+    FROM (SELECT average_salary, COUNT(*) AS freq
+        FROM final.companies_4fn
+        GROUP BY average_salary
+        ORDER BY freq DESC, average_salary
+        LIMIT 1)) AS moda
+FROM final.companies_4fn;
 
 --Covarianza y correlacion entre rating y salario promedio
 SELECT

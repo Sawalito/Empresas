@@ -708,6 +708,20 @@ FROM final.companies_4fn;
 
 Una varianza y coeficiente de variación bajos indican que la mayoría de las empresas tienen calificaciones similares. La asimetría negativa sugiere que hay más empresas con calificaciones altas, y la curtosis cercana a 0 indica una distribución similar a la normal.
 
+#### Distribucion del salario promedio
+```sql
+SELECT
+    total_benefits,
+    COUNT(*) AS num_empresas,
+    ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS porcentaje
+FROM final.companies_4fn
+GROUP BY total_benefits
+ORDER BY total_benefits DESC;
+```
+![CHART](./images/chart2.png)
+| media | varianza | desviacion | mediana | moda |
+| :--- | :--- | :--- | :--- | :--- |
+| 2502.916 | 267838445.446 | 16365.771 | 804 | 1100 |
 
 ### Análisis de Factores que Afectan el Rating de las Empresas
 Identificar qué variables tienen mayor relación con la calificación promedio (average_rating) de las empresas. Para ello, se calculan covarianzas y correlaciones entre el rating y otros atributos numéricos y categóricos, usando las tablas normalizadas del esquema final.
