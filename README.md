@@ -113,19 +113,16 @@ cd Empresas
 ```
 
 ## Instrucciones para psql en la terminal
-
-### Borrar y crear la base de datos
+Borrar y crear la base de datos
 ```sql
 DROP DATABASE IF EXISTS top_companies;
 CREATE DATABASE top_companies;
 ```
-
-### Conectarse a la base de datos
+Conectarse a la base de datos
 ```sql
 \c top_companies;
 ```
-
-### Borrar y crear la tabla
+Borrar y crear la tabla
 ```sql
 DROP TABLE IF EXISTS companies;
 
@@ -143,14 +140,14 @@ CREATE TABLE companies (
 );
 ```
 
-### Importar datos desde el archivo CSV
+Importar datos desde el archivo CSV
 ⚠️ IMPORTANTE: Antes de ejecutar este comando, cambia la dirección del archivo CSV en tu sistema.
 ```sql
 SET CLIENT_ENCODING TO 'UTF8';
 -- cambia la ruta
 \copy companies FROM 'C:/Users/HP/Documents/GitHub/Empresas/companies.csv' WITH (FORMAT csv, HEADER true, DELIMITER ',');
 ```
-### Importar coordenadas de ciudades
+Importar coordenadas de ciudades
 
 Crea la tabla temporal y luego importa el archivo `city_coordinates.csv`:
 
