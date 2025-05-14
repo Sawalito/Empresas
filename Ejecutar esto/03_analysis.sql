@@ -24,49 +24,59 @@ SELECT ROUND(AVG(average_rating)::numeric, 3)                                   
 FROM final.companies_4fn;
 
 
---Aspectos más mencionados como altamente valorados o criticados
-SELECT aspect,
-    COUNT(*) FILTER (WHERE highly_rated_for ILIKE '%' || aspect || '%') AS highly_rated_count,
-    COUNT(*) FILTER (WHERE critically_rated_for ILIKE '%' || aspect || '%') AS critically_rated_count
-FROM (
-  VALUES
-    ('Company Culture'),
-    ('Job Security'),
-    ('Promotions / Appraisal'),
-    ('Salary & Benefits'),
-    ('Skill Development / Learning'),
-    ('Work Life Balance'),
-    ('Work Satisfaction')
-) AS a(aspect)
-CROSS JOIN final.companies_4fn
-GROUP BY aspect
-ORDER BY highly_rated_count DESC, critically_rated_count DESC;
-
-
---Covarianza entre Salario Promedio y Calificación
+--Covarianza y correlacion entre rating y salario promedio
 SELECT
-  ROUND(COVAR_SAMP(average_salary, average_rating)::numeric, 2) AS covarianza_salario_rating
+    ROUND(COVAR_SAMP(average_rating, average_salary)::numeric, 2) AS covarianza,
+    ROUND(CORR(average_rating, average_salary)::numeric, 3) AS correlacion
 FROM final.companies_4fn
 WHERE average_salary IS NOT NULL AND average_rating IS NOT NULL;
 
--- Correlación entre Número de Beneficios y Calificación
+--Covarianza y correlacion entre rating y Número de beneficios (total_benefits)
 SELECT
-  ROUND(CORR(total_benefits::FLOAT, average_rating)::numeric, 3) AS correlacion_beneficios_rating
+    ROUND(COVAR_SAMP(average_rating, total_benefits)::numeric, 2) AS covarianza,
+    ROUND(CORR(average_rating, total_benefits)::numeric, 3) AS correlacion
 FROM final.companies_4fn
 WHERE total_benefits IS NOT NULL AND average_rating IS NOT NULL;
 
+-- prueba que da covarianza = varianza y correl = 1
+SELECT
+    ROUND(COVAR_SAMP(average_rating, average_rating)::numeric, 2) AS covarianza,
+    ROUND(CORR(average_rating, average_rating)::numeric, 3) AS correlacion
+FROM final.companies_4fn
+WHERE average_rating IS NOT NULL AND average_rating IS NOT NULL;
 
+--Covarianza y correlacion entre rating y total_reviews
+SELECT
+    ROUND(COVAR_SAMP(average_rating, total_reviews)::numeric, 2) AS covarianza,
+    ROUND(CORR(average_rating, total_reviews)::numeric, 3) AS correlacion
+FROM final.companies_4fn
+WHERE total_reviews IS NOT NULL AND average_rating IS NOT NULL;
 
--- Promedio de calificación agrupado por cada aspecto altamente valorado
+-- Promedio de rating por industria
+SELECT
+    d.industry,
+    ROUND(AVG(c.average_rating)::numeric, 3) AS avg_rating,
+    COUNT(*) AS num_empresas
+FROM final.companies_4fn c
+JOIN final.companies_description cd ON c.id = cd.id_companies
+JOIN final.descriptions d ON cd.id_description = d.id
+WHERE d.industry IS NOT NULL
+GROUP BY d.industry
+ORDER BY count(*) DESC
+LIMIT 10;
+
+-- Promedio de rating por aspecto altamente valorado (highly rating value)
 SELECT
     chr.rating_value AS aspect,
-    ROUND(AVG(c.average_rating)::NUMERIC, 3) AS avg_rating,
+    ROUND(AVG(c.average_rating)::numeric, 3) AS avg_rating,
     COUNT(*) AS num_empresas
 FROM final.companies_highly_rated chr
 JOIN final.companies_4fn c ON chr.id_company = c.id
 WHERE chr.rating_value IS NOT NULL AND c.average_rating IS NOT NULL
 GROUP BY chr.rating_value
-ORDER BY avg_rating DESC;
+ORDER BY avg_rating DESC
+LIMIT 10;
+
 
 --Beneficios Más Comunes en Empresas Mejor Calificadas
 SELECT

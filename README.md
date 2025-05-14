@@ -82,11 +82,12 @@ El objetivo de este conjunto de datos es proporcionar información detallada sob
 * Transparencia: Indicar claramente las fuentes de los datos y las metodologías empleadas para su análisis.  
 * Evitar discriminación: **Asegurar que el análisis no refuerce sesgos en la contratación o evaluación de empresas en función de factores como ubicación, industria o tamaño.**
 * Impacto en el mercado laboral: Considerar cómo la difusión de estos análisis podría influir en decisiones de contratación, salarios y beneficios, evitando afectar negativamente a empresas o empleados.
+* Asegurarse que la limpieza de los datos sea efectiva fue muy desafiente en algunos tipos de datos texto.
 
 
 Además, para enriquecer el análisis geográfico, se añadió una tabla de ciudades (`locations`) con coordenadas (latitud y longitud) asociadas a la ubicación de cada empresa.  
 El archivo `city_coordinates.csv` contiene las coordenadas de las ciudades y está incluido en el repositorio.
-Este csv se obtuvo usando Nominatim para geolocalizar las ciudades y un query en la tabla companies de las ubicaciones de las empresas despues de limpiarlo.
+Este csv se obtuvo usando Nominatim para geolocalizar las ciudades y un query en la tabla companies de las ubicaciones de las empresas despues de limpiarlo y con un rating mayor a 4.
 
 
 ### Análisis Preliminar del Dataset de Empresas
@@ -713,55 +714,23 @@ FROM final.companies_4fn;
 Una varianza y coeficiente de variación bajos indican que la mayoría de las empresas tienen calificaciones similares. La asimetría negativa sugiere que hay más empresas con calificaciones altas, y la curtosis cercana a 0 indica una distribución similar a la normal.
 
 
+### Análisis de Factores que Afectan el Rating de las Empresas
+Identificar qué variables tienen mayor relación con la calificación promedio (average_rating) de las empresas. Para ello, se calculan covarianzas y correlaciones entre el rating y otros atributos numéricos y categóricos, usando las tablas normalizadas del esquema final.
 
-### Identificar los aspectos más valorados y criticados en las compañías
-
-#### Aspectos más mencionados como altamente valorados o criticados
-```sql
-SELECT aspect,
-    COUNT(*) FILTER (WHERE highly_rated_for ILIKE '%' || aspect || '%') AS highly_rated_count,
-    COUNT(*) FILTER (WHERE critically_rated_for ILIKE '%' || aspect || '%') AS critically_rated_count
-FROM (
-  VALUES 
-    ('Company Culture'),
-    ('Job Security'),
-    ('Promotions / Appraisal'),
-    ('Salary & Benefits'),
-    ('Skill Development / Learning'),
-    ('Work Life Balance'),
-    ('Work Satisfaction')
-) AS a(aspect)
-CROSS JOIN final.companies_4fn
-GROUP BY aspect
-ORDER BY highly_rated_count DESC, critically_rated_count DESC;
-```
-| aspect | highly\_rated\_count | critically\_rated\_count |
-| :--- | :--- | :--- |
-| Job Security | 4560 | 361 |
-| Company Culture | 4194 | 190 |
-| Work Life Balance | 3795 | 146 |
-| Skill Development / Learning | 3255 | 168 |
-| Promotions / Appraisal | 3011 | 2414 |
-| Salary & Benefits | 2764 | 884 |
-| Work Satisfaction | 2252 | 261 |
-
-
-### Analizar factores que influyen en la calificación de una empresa
-
-#### Relación entre salario promedio y calificación
-Covarianza entre Salario Promedio y Calificación  
+#### Relación entre rating y salario promedio
+Covarianza y correlacion entre Salario Promedio y Calificación  
 ¿Las empresas mejor calificadas tienden a pagar más?
-
 ```sql
+--Covarianza y correlacion entre rating y salario promedio
 SELECT
-    ROUND(COVAR_SAMP(average_salary, average_rating)::numeric, 2) AS covarianza_salario_rating
+    ROUND(COVAR_SAMP(average_rating, average_salary)::numeric, 2) AS covarianza,
+    ROUND(CORR(average_rating, average_salary)::numeric, 3) AS correlacion
 FROM final.companies_4fn
 WHERE average_salary IS NOT NULL AND average_rating IS NOT NULL;
 ```
-
-| covarianza\_salario\_rating |
-| :--- |
-| -5.5 |
+| covarianza | correlacion |
+| :--- | :--- |
+| -5.5 | -0.001 |
 
 Una covarianza negativa sugiere que, en este conjunto de datos, a mayor salario promedio, menor calificación promedio de la empresa.  
 Esto resulta contraintuitivo, ya que se esperaría una relación positiva entre salario y satisfacción. Algunas posibles razones para este resultado pueden ser:
@@ -771,17 +740,20 @@ Esto resulta contraintuitivo, ya que se esperaría una relación positiva entre 
 - Puede haber sesgo en los datos o diferencias sectoriales que afectan la relación entre salario y calificación.
 - La muestra puede estar dominada por empresas de sectores donde el salario no es el principal factor de satisfacción.
 
-#### Correlación entre Número de Beneficios y Calificación
-¿Ofrecer más beneficios se asocia con mejores calificaciones?
+Sin embargo, la correlacion en milesimos nos muestra que la realcion no es tan linear. Salario y rating son practicamente independientes.
+
+#### Relación entre rating y Número de beneficios (total_benefits)
 ```sql
+--Covarianza y correlacion entre rating y Número de beneficios (total_benefits)
 SELECT
-    ROUND(CORR(total_benefits::FLOAT, average_rating)::numeric, 3) AS correlacion_beneficios_rating
+    ROUND(COVAR_SAMP(average_rating, total_benefits)::numeric, 2) AS covarianza,
+    ROUND(CORR(average_rating, total_benefits)::numeric, 3) AS correlacion
 FROM final.companies_4fn
 WHERE total_benefits IS NOT NULL AND average_rating IS NOT NULL;
 ```
-| correlacion\_beneficios\_rating |
-| :--- |
-| 0.036 |
+| covarianza | correlacion |
+| :--- | :--- |
+| 3.23 | 0.036 |
 
 El valor de 0.036 indica una correlación positiva muy débil entre el número de beneficios ofrecidos y la calificación promedio de las empresas. En la práctica, esto significa que aumentar la cantidad de beneficios no se traduce necesariamente en una mejor percepción por parte de los empleados.
 
@@ -789,18 +761,78 @@ Una correlación cercana a 1 implica una relación de proporcionalidad fuerte; c
 En este caso, la correlación es casi nula, igual algo contraintuitivo, lo que sugiere que otros factores (como cultura organizacional, balance vida-trabajo o salario) pueden tener mayor peso en la satisfacción de los empleados.
 Es posible que la calidad o relevancia de los beneficios importe más que la cantidad, o que existan diferencias sectoriales o de expectativas que diluyan el impacto de los beneficios en la calificación general.
 
+Los otros factores nuemricos en la tabla companies_4fn por definicion no tienen ninguna relacion con el rating, i.e. total_interviews, available_jobs, total_reviews
 
-#### Promedio de calificación agrupado por cada aspecto altamente valorado
+
+#### Relación entre rating y total_reviews
+```sql
+--Covarianza y correlacion entre rating y total_reviews
+SELECT
+    ROUND(COVAR_SAMP(average_rating, total_reviews)::numeric, 2) AS covarianza,
+    ROUND(CORR(average_rating, total_reviews)::numeric, 3) AS correlacion
+FROM final.companies_4fn
+WHERE total_reviews IS NOT NULL AND average_rating IS NOT NULL;
+```
+| covarianza | correlacion |
+| :--- | :--- |
+| 17.44 | 0.027 |
+
+
+#### Relación entre rating y Rating
+Mismo codigo pero comprobando con rating, en covarianza deberia salir la varianza de average_rating, y en correlacion 1.
+```sql
+-- prueba que da covarianza = varianza y correl = 1
+SELECT
+    ROUND(COVAR_SAMP(average_rating, average_rating)::numeric, 2) AS covarianza,
+    ROUND(CORR(average_rating, average_rating)::numeric, 3) AS correlacion
+FROM final.companies_4fn
+WHERE available_jobs IS NOT NULL AND average_rating IS NOT NULL;
+```
+| covarianza | correlacion |
+| :--- | :--- |
+| 0.15 | 1 |
+
+#### Promedio de rating por industria
+```sql
+-- Promedio de rating por industria
+SELECT
+    d.industry,
+    ROUND(AVG(c.average_rating)::numeric, 3) AS avg_rating,
+    COUNT(*) AS num_empresas
+FROM final.companies_4fn c
+JOIN final.companies_description cd ON c.id = cd.id_companies
+JOIN final.descriptions d ON cd.id_description = d.id
+WHERE d.industry IS NOT NULL
+GROUP BY d.industry
+ORDER BY count(*) DESC
+LIMIT 10;
+```
+| industry | avg\_rating | num\_empresas |
+| :--- | :--- | :--- |
+| IT Services & Consulting | 3.78 | 1223 |
+| Engineering & Construction | 3.988 | 466 |
+| Auto Components | 3.917 | 426 |
+| Industrial Machinery | 3.923 | 392 |
+| Pharma | 3.863 | 352 |
+| Healthcare | 3.956 | 328 |
+| Education & Training | 3.916 | 317 |
+| Financial Services | 3.833 | 273 |
+| Software Product | 3.823 | 245 |
+| Internet | 3.789 | 242 |
+
+
+#### Promedio de rating por aspecto altamente valorado (highly rating value)
 ```sql
 SELECT
     chr.rating_value AS aspect,
-    ROUND(AVG(c.average_rating)::NUMERIC, 3) AS avg_rating,
+    ROUND(AVG(c.average_rating), 3) AS avg_rating,
     COUNT(*) AS num_empresas
 FROM final.companies_highly_rated chr
 JOIN final.companies_4fn c ON chr.id_company = c.id
 WHERE chr.rating_value IS NOT NULL AND c.average_rating IS NOT NULL
 GROUP BY chr.rating_value
-ORDER BY avg_rating DESC;
+ORDER BY avg_rating DESC
+LIMIT 10;
 ```
 | aspect | avg\_rating | num\_empresas |
 | :--- | :--- | :--- |
@@ -812,6 +844,7 @@ ORDER BY avg_rating DESC;
 | Salary & Benefits | 3.771 | 2764 |
 | Promotions / Appraisal | 3.572 | 3011 |
 
+--- 
 #### Beneficios Más Comunes en Empresas Mejor Calificadas
 ¿Qué beneficios aparecen más en empresas con calificación superior a 4?
 ```sql
@@ -909,7 +942,6 @@ LIMIT 10;
 
 
 ### Estudiar tendencias en el mercado laboral
-
 #### Relación entre entrevistas y trabajos disponibles (indicador de demanda)
 ```sql
 SELECT company_name,
@@ -982,3 +1014,7 @@ LIMIT 10;
 | Tech Mahindra | 251300 | 3.7 | 248797.083716454613493 | -0.19609750882068688 |
 | IBM | 221500 | 4.1 | 218997.083716454613493 | 0.20390249117931258 |
 | Genpact | 190400 | 3.9 | 187897.083716454613493 | 0.0039024911793128503 |
+
+
+---
+
