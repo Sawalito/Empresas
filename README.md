@@ -679,44 +679,10 @@ FROM final.companies_4fn
 GROUP BY average_rating
 ORDER BY average_rating DESC;
 ```
-| average\_rating | num\_empresas | porcentaje |
-| :--- | :--- | :--- |
-| 5 | 11 | 0.12 |
-| 4.9 | 24 | 0.26 |
-| 4.8 | 48 | 0.51 |
-| 4.7 | 65 | 0.69 |
-| 4.6 | 127 | 1.36 |
-| 4.5 | 198 | 2.12 |
-| 4.4 | 363 | 3.88 |
-| 4.3 | 609 | 6.51 |
-| 4.2 | 855 | 9.14 |
-| 4.1 | 1108 | 11.84 |
-| 4 | 1112 | 11.89 |
-| 3.9 | 1051 | 11.23 |
-| 3.8 | 913 | 9.76 |
-| 3.7 | 718 | 7.68 |
-| 3.6 | 597 | 6.38 |
-| 3.5 | 469 | 5.01 |
-| 3.4 | 308 | 3.29 |
-| 3.3 | 246 | 2.63 |
-| 3.2 | 181 | 1.93 |
-| 3.1 | 124 | 1.33 |
-| 3 | 63 | 0.67 |
-| 2.9 | 50 | 0.53 |
-| 2.8 | 34 | 0.36 |
-| 2.7 | 23 | 0.25 |
-| 2.6 | 18 | 0.19 |
-| 2.5 | 11 | 0.12 |
-| 2.4 | 9 | 0.1 |
-| 2.3 | 6 | 0.06 |
-| 2.2 | 4 | 0.04 |
-| 2.1 | 6 | 0.06 |
-| 2 | 1 | 0.01 |
-| 1.9 | 1 | 0.01 |
-| 1.6 | 1 | 0.01 |
-| 1.3 | 1 | 0.01 |
+|
+![CHART](./images/chart.png)
 
-Estadísticas descriptivas de las calificaciones promedio
+Se pueden hacer estadísticas descriptivas de las calificaciones
 ¿Las empresas tienen calificaciones muy dispersas o la mayoría se concentra en un rango? 
 Se presentan varias medidas estadísticas para analizar la distribución de las calificaciones promedio.
 ```sql
