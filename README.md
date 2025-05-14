@@ -9,7 +9,6 @@
 
 # **Top Companies**
 
-## **Introducción**
 Este proyecto tiene como objetivo analizar y limpiar un conjunto de datos sobre las principales 10,000 empresas, facilitando la extracción de información clave sobre calificaciones, salarios y beneficios. 
 
 
