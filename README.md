@@ -631,11 +631,23 @@ ADD CONSTRAINT fk_critically_rated_company
 ```
 Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4NF**.
 
+### Tablas finales normalizadas
+
+- **final.companies_4fn**: Información esencial de cada empresa.
+- **final.descriptions**: Detalles de la empresa (industria, empleados, tipo, antigüedad, referencia a ciudad).
+- **final.locations**: Ciudades con latitud y longitud.
+- **final.companies_highly_rated**: Aspectos altamente valorados por empresa.
+- **final.companies_critically_rated**: Aspectos más criticados por empresa.
+- **final.companies_description**: Relación entre empresas y descripciones.
+
+---
+
 ### Migración al esquema final
 
 Para distinguir las tablas normalizadas, se migran al esquema `final`:
 
 ```sql
+DROP SCHEMA IF EXISTS final CASCADE;
 CREATE SCHEMA IF NOT EXISTS final;
 
 ALTER TABLE normalizacion.companies_4fn SET SCHEMA final;
@@ -643,6 +655,8 @@ ALTER TABLE normalizacion.descriptions SET SCHEMA final;
 ALTER TABLE normalizacion.companies_highly_rated SET SCHEMA final;
 ALTER TABLE normalizacion.companies_critically_rated SET SCHEMA final;
 ALTER TABLE normalizacion.companies_description SET SCHEMA final;
+ALTER TABLE normalizacion.locations SET SCHEMA final;
+
 ```
 ## Diagrama Entidad-Relación (ERD)
 
