@@ -76,13 +76,6 @@ Los atributos de tipo texto son:
 
 No hay atributos de tipo temporal y/o fecha
 
-El objetivo de este conjunto de datos es proporcionar información detallada sobre las principales 10,000 empresas, permitiendo analizar factores clave del mercado laboral. El equipo lo utilizará para:
-
-* Evaluar las opiniones de los empleados sobre sus empresas.  
-* Identificar los aspectos más valorados y criticados en las compañías.  
-* Analizar factores que influyen en la calificación de una empresa.  
-* Comparar salarios y oportunidades laborales entre empresas.  
-* Estudiar tendencias en el mercado laboral, como la demanda de talento y los beneficios ofrecidos.
 
 **Consideraciones Éticas que conlleva el análisis y explotación de dichos datos**
 * Privacidad y anonimización: Asegurar que los datos personales de empleados o evaluadores estén protegidos y, si es necesario, anonimizar información sensible.  
