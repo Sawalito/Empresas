@@ -106,7 +106,7 @@ Para un análisis más profundo, sería útil limpiar y transformar ciertos atri
 ---
 
 ## **Instalación y Configuración**
-### **1. Clonar el repositorio**
+Clonar el repositorio
 ```bash
 git clone [URL_DEL_REPOSITORIO]
 cd Empresas
