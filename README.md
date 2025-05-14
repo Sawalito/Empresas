@@ -40,8 +40,7 @@ En este conjunto de datos hay 10 000 tuplas que contienen informacion de 10 000 
 Cada atributo tiene el siguiete significado de acuerdo a la pagina de origen.
 
 * Company_name - Nombre de la empresa.  
-* Description - Breve descripción de la empresa, incluyendo industria y número de  
-  Empleados.  
+* Description - Breve descripción de la empresa, incluyendo industria y número de Empleados.  
 * Ratings - Calificación promedio de la empresa según las reseñas.  
 * Highly_rated_for - Aspectos altamente valorados de la empresa por los empleados.  
 * Critically_rated_for - Aspectos más criticados de la empresa.  
@@ -87,7 +86,7 @@ No hay atributos de tipo temporal y/o fecha
 
 Además, para enriquecer el análisis geográfico, se añadió una tabla de ciudades (`locations`) con coordenadas (latitud y longitud) asociadas a la ubicación de cada empresa.  
 El archivo `city_coordinates.csv` contiene las coordenadas de las ciudades y está incluido en el repositorio.
-Este csv se obtuvo usando Nominatim para geolocalizar las ciudades y un query en la tabla companies de las ubicaciones donde hay empresas despues de limpiarlo y con un rating mayor a 4.
+Este csv se obtuvo usando Nominatim para geolocalizar las ciudades y un query en la tabla companies, de las ubicaciones donde hay empresas y con un rating mayor a 4.
 
 
 ### Análisis Preliminar del Dataset de Empresas
@@ -267,7 +266,7 @@ WHERE ctid NOT IN (
   GROUP BY company_name, average_rating, highly_rated_for, critically_rated_for, total_reviews, average_salary, total_interviews, total_benefits
 );
 ```
-Con estos pasos, los datos en el esquema `limpieza` están listos para su normalización.
+Con estos pasos, los datos en el esquema `limpieza` están listos para ser  normalizado.
 
 ## Normalización de datos hasta cuarta formal normal
 
