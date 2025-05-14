@@ -709,8 +709,6 @@ FROM final.companies_4fn;
 - **Varianza** y **Desviación estándar**: Miden la dispersión de las calificaciones.
 - **Mediana**: Valor central de la distribución.
 - **Moda**: Calificación más frecuente.
-- **Asimetría**: Indica si la distribución está sesgada a la izquierda o derecha (negativa: sesgo a la izquierda). No se pudo calcular
-- **Curtosis**: Mide la "altitud" de la distribución (mayor a 0: más concentrada en el centro y colas). No se pudo calcular
 
 Una varianza y coeficiente de variación bajos indican que la mayoría de las empresas tienen calificaciones similares. La asimetría negativa sugiere que hay más empresas con calificaciones altas, y la curtosis cercana a 0 indica una distribución similar a la normal.
 
