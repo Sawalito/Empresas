@@ -80,12 +80,14 @@ SELECT
     ROUND(AVG(c.average_rating)::numeric, 3) AS avg_rating,
     COUNT(*) AS num_empresas
 FROM final.companies_4fn c
-JOIN final.companies_description cd ON c.id = cd.id_companies
-JOIN final.descriptions d ON cd.id_description = d.id
+JOIN final.descriptions d ON c.description_id = d.id
 WHERE d.industry IS NOT NULL
 GROUP BY d.industry
 ORDER BY count(*) DESC
 LIMIT 10;
+
+
+SELECT * FROM final.companies_4fn;
 
 -- Promedio de rating por aspecto altamente valorado (highly rating value)
 SELECT
@@ -120,18 +122,6 @@ ORDER BY average_salary DESC
 LIMIT 5;
 
 
---Empresas con Mayor Varianza en Salarios por Industria
-SELECT
-  d.industry,
-  ROUND(VAR_SAMP(c.average_salary), 2) AS varianza_salario,
-  COUNT(*) AS empresas
-FROM final.companies_4fn c
-JOIN final.companies_description cd ON c.id = cd.id_companies
-JOIN final.descriptions d ON cd.id_description = d.id
-WHERE c.average_salary IS NOT NULL AND d.industry IS NOT NULL
-GROUP BY d.industry
-ORDER BY varianza_salario DESC
-LIMIT 10;
 
 --Relación entre número de empleos disponibles y salario
 SELECT company_name,
