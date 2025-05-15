@@ -1017,7 +1017,7 @@ LIMIT 10;
 ---
 
 ## Vista ciudades continente
-Enriqueciendo los datos con coordenadas:
+Enriqueciendo los datos con coordenadas de las empresas con rating mayor o igual a 4:
 ![MAP](./images/map.png)
 
 Script `04_analysis.sql`
