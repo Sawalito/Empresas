@@ -1025,8 +1025,8 @@ Script `04_analysis.sql`
 Con el objetivo de ver mas concentrado las empresas, ordenadas por continente, e incluso por pais, agregamos a la base la vista de ciudades_continente. Asi podemos ver las mismas consultas anteriores pero a nivel mas local.
 
 ```sql
-DROP VIEW IF EXISTS vista_ciudades_continente CASCADE ;
-CREATE VIEW vista_ciudades_continente AS
+DROP VIEW IF EXISTS final.vista_ciudades_continente CASCADE ;
+CREATE VIEW final.vista_ciudades_continente AS
 SELECT
     id,
     city,
@@ -1044,8 +1044,8 @@ SELECT
     END AS continente
 FROM final.locations;
 
-DROP VIEW IF EXISTS vista_companies_continente CASCADE;
-CREATE VIEW vista_companies_continente AS
+DROP VIEW IF EXISTS final.vista_companies_continente CASCADE;
+CREATE VIEW final.vista_companies_continente AS
 SELECT
     cm.*,
     cc.continente AS continent,
@@ -1056,54 +1056,52 @@ SELECT
 FROM vista_ciudades_continente cc
 JOIN final.descriptions d
 ON d.id_city = cc.id
-JOIN final.companies_description cd
-ON d.id = cd.id_description
 JOIN final.companies_4fn cm
-ON cd.id_companies = cm.id;
+ON d.id = cm.description_id;
 
-SELECT * FROM final.companies_highly_rated;
 
 -- Europa
-DROP VIEW IF EXISTS europa;
-CREATE VIEW europa AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.europa;
+CREATE VIEW final.europa AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Europa';
 
 -- África
-DROP VIEW IF EXISTS africa;
-CREATE VIEW africa AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.africa;
+CREATE VIEW final.africa AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'África';
 
 -- Asia
-DROP VIEW IF EXISTS asia;
-CREATE VIEW asia AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.asia;
+CREATE VIEW final.asia AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Asia';
 
 -- Sudamérica
-DROP VIEW IF EXISTS sudamerica;
-CREATE VIEW sudamerica AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.sudamerica;
+CREATE VIEW final.sudamerica AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Sudamérica';
 
 -- Norteamérica
-DROP VIEW IF EXISTS norteamerica;
-CREATE VIEW norteamerica AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.norteamerica;
+CREATE VIEW final.norteamerica AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Norteamérica';
 
 -- Oceanía
-DROP VIEW IF EXISTS oceania;
-CREATE VIEW oceania AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.oceania;
+CREATE VIEW final.oceania AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Oceanía';
 
 -- Antártida
-DROP VIEW IF EXISTS antartida;
-CREATE VIEW antartida AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.antartida;
+CREATE VIEW final.antartida AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Antártida';
+
 ```
 (...) El resto continua en el script 04
 
