@@ -140,7 +140,7 @@ CREATE TABLE companies (
 ```
 
 Importar datos desde el archivo CSV
-⚠️ IMPORTANTE: Antes de ejecutar este comando, cambia la dirección del archivo CSV en tu sistema.
+IMPORTANTE: Antes de ejecutar este comando, cambia la dirección del archivo CSV en tu sistema.
 ```sql
 SET CLIENT_ENCODING TO 'UTF8';
 -- cambia la ruta
@@ -1022,7 +1022,7 @@ Enriqueciendo los datos con coordenadas:
 
 Script `04_analysis.sql`
 
-Con el objetivo de ver mas concentrado las empresas, ordenadas por continente, e incluso por pais, agregamos a la base la vista de ciudades_continente. Asi podemos ver las mismas consultas anteriores pero a nivel mas local.
+Con el objetivo de ver mas concentrado las empresas, ordenadas por continente, agregamos a la base la vista de ciudades_continente. Asi podemos ver las mismas consultas anteriores pero a nivel mas local.
 
 ```sql
 DROP VIEW IF EXISTS final.vista_ciudades_continente CASCADE ;
