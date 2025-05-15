@@ -1151,7 +1151,7 @@ LIMIT 10;
 | Calix                    | 4.7    |
 | Model N                  | 4.7    |
 
-### Aspectos de highly_rated más calificados
+### Aspectos de highly_rated más calificados para empresas con rating mayor o igual a 4
 
 ```sql
 SELECT
@@ -1174,7 +1174,7 @@ GROUP BY chr.rating_value ;
 | 397    | Work Life Balance             |
 | 88     | Work Satisfaction             |
 
-### Aspectos de critically_rated más calificados
+### Aspectos de critically_rated más calificados para empresas con rating mayor o igual a 4
 
 ```sql
 SELECT
@@ -1195,6 +1195,15 @@ GROUP BY ccr.value;
 | 1      | Work Satisfaction             |
 | 0      | null                          |
 
-
+## Algunas correlaciones interesantes
+### Correlación entre salario y rating
+```sql
+SELECT
+    CORR(average_salary, average_rating) AS correlacion
+FROM final.norteamerica;
+```
+| correlacion             |
+|-------------------------|
+| 0.02428601234692547     |
 
 
