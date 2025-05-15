@@ -1128,4 +1128,73 @@ LIMIT 10;
 | Analytics & KPO           | 20    |
 
 
+### Empresas mejor valoradas
+
+```sql
+SELECT
+    company_name,
+    average_rating
+FROM final.norteamerica
+ORDER BY average_rating DESC
+LIMIT 10;
+```
+| Company                  | Rating |
+|--------------------------|--------|
+| DWP Global               | 4.8    |
+| 7Search PPC              | 4.8    |
+| KrishTeck Technologies   | 4.8    |
+| MedTourEasy              | 4.8    |
+| Tekwissen                | 4.8    |
+| Reebok                   | 4.8    |
+| Aurigo                   | 4.8    |
+| SRM Techsol              | 4.7    |
+| Calix                    | 4.7    |
+| Model N                  | 4.7    |
+
+### Aspectos de highly_rated más calificados
+
+```sql
+SELECT
+    COUNT(chr.rating_value),
+    chr.rating_value
+FROM final.norteamerica n
+JOIN final.companies_highly_rated chr
+    ON n.id = chr.id_company
+WHERE n.average_rating >= 4
+GROUP BY chr.rating_value ;
+```
+
+| Count | Category                       |
+|--------|--------------------------------|
+| 449    | Company Culture               |
+| 269    | Job Security                  |
+| 6      | Promotions / Appraisal        |
+| 130    | Salary & Benefits             |
+| 209    | Skill Development / Learning  |
+| 397    | Work Life Balance             |
+| 88     | Work Satisfaction             |
+
+### Aspectos de critically_rated más calificados
+
+```sql
+SELECT
+    COUNT(ccr.value),
+    ccr.value
+FROM final.norteamerica n
+JOIN final.companies_critically_rated ccr
+    ON n.id = ccr.id_company
+WHERE n.average_rating >= 4
+GROUP BY ccr.value;
+```
+| Count | Category                       |
+|--------|--------------------------------|
+| 13     | Job Security                  |
+| 111    | Promotions / Appraisal        |
+| 16     | Salary & Benefits             |
+| 4      | Skill Development / Learning  |
+| 1      | Work Satisfaction             |
+| 0      | null                          |
+
+
+
 
