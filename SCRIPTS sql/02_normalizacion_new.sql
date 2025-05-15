@@ -106,6 +106,8 @@ ALTER TABLE normalizacion.descriptions DROP COLUMN description;
 -- Agrega la clave foránea
 ALTER TABLE normalizacion.companies ADD CONSTRAINT fk_companies_description FOREIGN KEY (description_id) REFERENCES normalizacion.descriptions(id) ON DELETE SET NULL;
 
+
+-- Enriquecimiento de la base de datos con location: latitud y longitud.
 UPDATE normalizacion.descriptions
 SET location = REGEXP_REPLACE(location, '\s*\+\d+\s*more', '', 'gi');
 
@@ -144,7 +146,6 @@ WHERE l.city=c.city;
 
 
 -- Normalización de la tabla companies
-
 --tablas parciales:
 DROP TABLE IF EXISTS normalizacion.companies_fn1;
 CREATE TABLE normalizacion.companies_fn1 AS
@@ -162,6 +163,7 @@ LEFT JOIN LATERAL (
     SELECT regexp_split_to_table(c.critically_rated_for, '\s*,\s*') AS value
 ) r ON true;
 
+-- por teorema de Heath
 DROP TABLE IF EXISTS normalizacion.companies_4fn;
 CREATE TABLE normalizacion.companies_4fn AS
     SELECT DISTINCT

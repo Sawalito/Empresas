@@ -450,6 +450,25 @@ FROM (
     FROM normalizacion.companies
     WHERE description IS NOT NULL
 ) d;
+
+--agregar comcolumna a companies llamada description_id
+ALTER TABLE normalizacion.companies
+ADD COLUMN description_id BIGINT;
+
+--hacer la consulta correlacionada para llenar la columna description_id
+UPDATE normalizacion.companies
+SET description_id = (
+    SELECT id
+    FROM normalizacion.descriptions
+    WHERE description = normalizacion.companies.description
+);
+
+ALTER TABLE normalizacion.companies DROP COLUMN description;
+ALTER TABLE normalizacion.descriptions DROP COLUMN description;
+
+-- Agrega la clave foránea
+ALTER TABLE normalizacion.companies ADD CONSTRAINT fk_companies_description FOREIGN KEY (description_id) REFERENCES normalizacion.descriptions(id) ON DELETE SET NULL;
+
 ```
 Esto permite almacenar cada atributo en su **propia columna**.
 ---
@@ -469,8 +488,6 @@ CREATE TABLE IF NOT EXISTS normalizacion.locations (
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION
 );
-
-SELECT*FROM normalizacion.locations;
 
 INSERT INTO normalizacion.locations (city)
 SELECT DISTINCT location FROM normalizacion.descriptions;
@@ -498,29 +515,6 @@ WHERE l.city=c.city;
 ```
 ---
 
-Relacionar empresas y descripciones.
-
-```sql
--- Agrega la columna id_description a companies
-ALTER TABLE normalizacion.companies ADD COLUMN id_description BIGINT;
-
--- Actualiza id_description con el id correspondiente de descriptions
-UPDATE normalizacion.companies c
-SET id_description = d.id
-FROM normalizacion.descriptions d
-WHERE c.description = d.description;
-
--- (Opcional pero recomendable) Elimina la columna description de companies
-ALTER TABLE normalizacion.companies DROP COLUMN description;
-
--- Agrega la clave foránea
-ALTER TABLE normalizacion.companies
-ADD CONSTRAINT fk_companies_description
-FOREIGN KEY (id_description) REFERENCES normalizacion.descriptions(id)
-ON DELETE SET NULL;
-```
----
-
 ### Descomposición de Atributos Multivaluados
 Debido a que los atributos `highly_rated_for` y `critically_rated_for` son multivaluados, se realizó una descomposición en relaciones independientes, eliminando la redundancia y dejando cada valor en una sola celda (cumpliendo 1NF y avanzando hacia 4NF).
 
@@ -538,8 +532,8 @@ Companies_Critically_Rated = { id, rating_value }
 {id } → { rating_value }
 ```
 
-
 ```sql
+-- Normalización de la tabla companies
 --tablas parciales:
 DROP TABLE IF EXISTS normalizacion.companies_fn1;
 CREATE TABLE normalizacion.companies_fn1 AS
@@ -557,7 +551,7 @@ LEFT JOIN LATERAL (
     SELECT regexp_split_to_table(c.critically_rated_for, '\s*,\s*') AS value
 ) r ON true;
 
---por Teorema de Heath
+-- por teorema de Heath
 DROP TABLE IF EXISTS normalizacion.companies_4fn;
 CREATE TABLE normalizacion.companies_4fn AS
     SELECT DISTINCT
@@ -568,7 +562,8 @@ CREATE TABLE normalizacion.companies_4fn AS
     average_salary,
     total_interviews,
     available_jobs,
-    total_benefits
+    total_benefits,
+    description_id
 FROM normalizacion.companies_fn2;
 
 -- Agregar clave primaria a la tabla companies_4fn para permitir referencias foráneas
@@ -605,7 +600,6 @@ FROM normalizacion.companies_fn2;
 ---
 Se agregan claves foráneas para asegurar la integridad entre empresas, descripciones, ubicaciones y aspectos valorados/criticados.
 
-
 ```sql
 -- Llaves foráneas para mantener integridad referencial
 
@@ -621,6 +615,7 @@ ADD CONSTRAINT fk_critically_rated_company
   FOREIGN KEY (id_company) REFERENCES normalizacion.companies_4fn(id)
   ON DELETE CASCADE;
 
+SELECT * FROM normalizacion.locations;
 ```
 Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4NF**.
 
@@ -631,7 +626,6 @@ Ahora los atributos multivaluados están en **tablas separadas**, cumpliendo **4
 - **final.locations**: Ciudades con latitud y longitud.
 - **final.companies_highly_rated**: Aspectos altamente valorados por empresa.
 - **final.companies_critically_rated**: Aspectos más criticados por empresa.
-- **final.companies_description**: Relación entre empresas y descripciones.
 
 ---
 
