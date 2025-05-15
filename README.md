@@ -776,7 +776,7 @@ WHERE total_reviews IS NOT NULL AND average_rating IS NOT NULL;
 | 17.44 | 0.027 |
 
 
-#### Relación entre rating y Rating
+#### Comprobacion con relación entre rating y Rating
 Mismo codigo pero comprobando con rating, en covarianza deberia salir la varianza de average_rating, y en correlacion 1.
 ```sql
 -- prueba que da covarianza = varianza y correl = 1
@@ -868,97 +868,6 @@ LIMIT 10;
 
 Estos son los beneficios más comunes en empresas con calificación promedio superior a 4.
 Estos beneficios pueden ser factores clave para una buena percepción de la empresa.
-
-## Vista ciudades continente
-Enriqueciendo los datos con coordenadas:
-![MAP](./images/map.png)
-
-Script `04_analysis.sql`
-
-```sql
-DROP VIEW IF EXISTS vista_ciudades_continente CASCADE ;
-CREATE VIEW vista_ciudades_continente AS
-SELECT
-    id,
-    city,
-    latitude,
-    longitude,
-    CASE
-        WHEN latitude BETWEEN -35 AND 37 AND longitude BETWEEN -10 AND 60 THEN 'Europa'
-        WHEN latitude BETWEEN -35 AND 35 AND longitude BETWEEN -20 AND 55 THEN 'África'
-        WHEN latitude BETWEEN 5 AND 80 AND longitude BETWEEN 60 AND 180 THEN 'Asia'
-        WHEN latitude BETWEEN -55 AND 15 AND longitude BETWEEN -80 AND -35 THEN 'Sudamérica'
-        WHEN latitude BETWEEN 15 AND 75 AND longitude BETWEEN -170 AND -50 THEN 'Norteamérica'
-        WHEN latitude BETWEEN -50 AND 0 AND longitude BETWEEN 110 AND 180 THEN 'Oceanía'
-        WHEN latitude < -60 THEN 'Antártida'
-        ELSE 'Desconocido'
-    END AS continente
-FROM final.locations;
-
-DROP VIEW IF EXISTS vista_companies_continente CASCADE;
-CREATE VIEW vista_companies_continente AS
-SELECT
-    cm.*,
-    cc.continente AS continent,
-    cc.city AS city,
-    d.age AS age,
-    d.company_type AS company_type,
-    d.industry
-FROM vista_ciudades_continente cc
-JOIN final.descriptions d
-ON d.id_city = cc.id
-JOIN final.companies_description cd
-ON d.id = cd.id_description
-JOIN final.companies_4fn cm
-ON cd.id_companies = cm.id;
-
-SELECT * FROM final.companies_highly_rated;
-
--- Europa
-DROP VIEW IF EXISTS europa;
-CREATE VIEW europa AS
-SELECT * FROM vista_companies_continente
-WHERE continent ILIKE 'Europa';
-
--- África
-DROP VIEW IF EXISTS africa;
-CREATE VIEW africa AS
-SELECT * FROM vista_companies_continente
-WHERE continent ILIKE 'África';
-
--- Asia
-DROP VIEW IF EXISTS asia;
-CREATE VIEW asia AS
-SELECT * FROM vista_companies_continente
-WHERE continent ILIKE 'Asia';
-
--- Sudamérica
-DROP VIEW IF EXISTS sudamerica;
-CREATE VIEW sudamerica AS
-SELECT * FROM vista_companies_continente
-WHERE continent ILIKE 'Sudamérica';
-
--- Norteamérica
-DROP VIEW IF EXISTS norteamerica;
-CREATE VIEW norteamerica AS
-SELECT * FROM vista_companies_continente
-WHERE continent ILIKE 'Norteamérica';
-
--- Oceanía
-DROP VIEW IF EXISTS oceania;
-CREATE VIEW oceania AS
-SELECT * FROM vista_companies_continente
-WHERE continent ILIKE 'Oceanía';
-
--- Antártida
-DROP VIEW IF EXISTS antartida;
-CREATE VIEW antartida AS
-SELECT * FROM vista_companies_continente
-WHERE continent ILIKE 'Antártida';
-```
-(...)
-
-
 
 ### Analizar salarios y oportunidades laborales entre empresas
 #### Top 5 empresas con mejor salario promedio
@@ -1106,4 +1015,96 @@ LIMIT 10;
 
 
 ---
+
+## Vista ciudades continente
+Enriqueciendo los datos con coordenadas:
+![MAP](./images/map.png)
+
+Script `04_analysis.sql`
+
+Con el objetivo de ver mas concentrado las empresas, ordenadas por continente, e incluso por pais, agregamos a la base la vista de ciudades_continente. Asi podemos ver las mismas consultas anteriores pero a nivel mas local.
+
+```sql
+DROP VIEW IF EXISTS vista_ciudades_continente CASCADE ;
+CREATE VIEW vista_ciudades_continente AS
+SELECT
+    id,
+    city,
+    latitude,
+    longitude,
+    CASE
+        WHEN latitude BETWEEN -35 AND 37 AND longitude BETWEEN -10 AND 60 THEN 'Europa'
+        WHEN latitude BETWEEN -35 AND 35 AND longitude BETWEEN -20 AND 55 THEN 'África'
+        WHEN latitude BETWEEN 5 AND 80 AND longitude BETWEEN 60 AND 180 THEN 'Asia'
+        WHEN latitude BETWEEN -55 AND 15 AND longitude BETWEEN -80 AND -35 THEN 'Sudamérica'
+        WHEN latitude BETWEEN 15 AND 75 AND longitude BETWEEN -170 AND -50 THEN 'Norteamérica'
+        WHEN latitude BETWEEN -50 AND 0 AND longitude BETWEEN 110 AND 180 THEN 'Oceanía'
+        WHEN latitude < -60 THEN 'Antártida'
+        ELSE 'Desconocido'
+    END AS continente
+FROM final.locations;
+
+DROP VIEW IF EXISTS vista_companies_continente CASCADE;
+CREATE VIEW vista_companies_continente AS
+SELECT
+    cm.*,
+    cc.continente AS continent,
+    cc.city AS city,
+    d.age AS age,
+    d.company_type AS company_type,
+    d.industry
+FROM vista_ciudades_continente cc
+JOIN final.descriptions d
+ON d.id_city = cc.id
+JOIN final.companies_description cd
+ON d.id = cd.id_description
+JOIN final.companies_4fn cm
+ON cd.id_companies = cm.id;
+
+SELECT * FROM final.companies_highly_rated;
+
+-- Europa
+DROP VIEW IF EXISTS europa;
+CREATE VIEW europa AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Europa';
+
+-- África
+DROP VIEW IF EXISTS africa;
+CREATE VIEW africa AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'África';
+
+-- Asia
+DROP VIEW IF EXISTS asia;
+CREATE VIEW asia AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Asia';
+
+-- Sudamérica
+DROP VIEW IF EXISTS sudamerica;
+CREATE VIEW sudamerica AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Sudamérica';
+
+-- Norteamérica
+DROP VIEW IF EXISTS norteamerica;
+CREATE VIEW norteamerica AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Norteamérica';
+
+-- Oceanía
+DROP VIEW IF EXISTS oceania;
+CREATE VIEW oceania AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Oceanía';
+
+-- Antártida
+DROP VIEW IF EXISTS antartida;
+CREATE VIEW antartida AS
+SELECT * FROM vista_companies_continente
+WHERE continent ILIKE 'Antártida';
+```
+(...) El resto continua en el script 04
+
 
