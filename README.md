@@ -1103,6 +1103,6 @@ SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Antártida';
 
 ```
-(...) El resto continua en el script 04
+El resto de las consultas a nivel continente se pueden observar en el script 04
 
 
