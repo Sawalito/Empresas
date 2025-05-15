@@ -1226,6 +1226,13 @@ FROM final.norteamerica;
 |-------------------------|
 |0.06125804776864004      |
 
+# Conclusión
+Este proyecto tuvo como objetivo principal analizar información relevante sobre las mejores 10,000 empresas del mundo desde una perspectiva de Recursos Humanos. A través de esta base de datos, fue posible cumplir con nuestras metas: evaluar las opiniones de los empleados sobre sus empresas, identificar los aspectos más valorados y criticados, analizar factores que influyen en la calificación de una empresa, comparar salarios y oportunidades laborales entre empresas, y estudiar tendencias en el mercado laboral global.
 
+Uno de los principales retos a los que nos enfrentamos fue la condición inicial de la base de datos. Al no estar limpia ni estructurada adecuadamente, fue necesario llevar a cabo un proceso riguroso de limpieza, transformación y normalización, hasta alcanzar la Cuarta Forma Normal (4FN). Este trabajo fue complejo y demandó tiempo, pero resultó esencial para garantizar la calidad de los análisis posteriores.
+
+Una vez estructurada adecuadamente, utilizamos consultas SQL para extraer información clave, lo que nos permitió generar gráficos, aplicar análisis de correlación y covarianza, y obtener una visión más profunda de las relaciones entre variables como satisfacción laboral, salario, cultura organizacional y oportunidades de crecimiento.
+
+En conclusión, la base de datos no solo cumplió con su propósito inicial, sino que también nos permitió obtener insights valiosos para entender mejor el entorno laboral global. Este proyecto demuestra cómo una base de datos bien estructurada puede convertirse en una herramienta poderosa para la toma de decisiones estratégicas de las empresas.
 
 
