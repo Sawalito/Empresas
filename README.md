@@ -1103,6 +1103,17 @@ SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Antártida';
 
 ```
-El resto de las consultas a nivel continente se pueden observar en el script 04
+### Tipo de industria y cantidad de empresas de esa industria para Norteámerica
+
+```sql
+SELECT
+    DISTINCT industry,
+    COUNT(industry)
+FROM final.norteamerica
+GROUP BY industry
+ORDER BY COUNT(industry) DESC
+LIMIT 10;
+```
+
 
 
