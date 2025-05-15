@@ -1,5 +1,5 @@
-DROP VIEW IF EXISTS vista_ciudades_continente CASCADE ;
-CREATE VIEW vista_ciudades_continente AS
+DROP VIEW IF EXISTS final.vista_ciudades_continente CASCADE ;
+CREATE VIEW final.vista_ciudades_continente AS
 SELECT
     id,
     city,
@@ -17,8 +17,8 @@ SELECT
     END AS continente
 FROM final.locations;
 
-DROP VIEW IF EXISTS vista_companies_continente CASCADE;
-CREATE VIEW vista_companies_continente AS
+DROP VIEW IF EXISTS final.vista_companies_continente CASCADE;
+CREATE VIEW final.vista_companies_continente AS
 SELECT
     cm.*,
     cc.continente AS continent,
@@ -29,53 +29,50 @@ SELECT
 FROM vista_ciudades_continente cc
 JOIN final.descriptions d
 ON d.id_city = cc.id
-JOIN final.companies_description cd
-ON d.id = cd.id_description
 JOIN final.companies_4fn cm
-ON cd.id_companies = cm.id;
+ON d.id = cm.description_id;
 
-SELECT * FROM final.companies_highly_rated;
 
 -- Europa
-DROP VIEW IF EXISTS europa;
-CREATE VIEW europa AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.europa;
+CREATE VIEW final.europa AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Europa';
 
 -- África
-DROP VIEW IF EXISTS africa;
-CREATE VIEW africa AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.africa;
+CREATE VIEW final.africa AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'África';
 
 -- Asia
-DROP VIEW IF EXISTS asia;
-CREATE VIEW asia AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.asia;
+CREATE VIEW final.asia AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Asia';
 
 -- Sudamérica
-DROP VIEW IF EXISTS sudamerica;
-CREATE VIEW sudamerica AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.sudamerica;
+CREATE VIEW final.sudamerica AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Sudamérica';
 
 -- Norteamérica
-DROP VIEW IF EXISTS norteamerica;
-CREATE VIEW norteamerica AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.norteamerica;
+CREATE VIEW final.norteamerica AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Norteamérica';
 
 -- Oceanía
-DROP VIEW IF EXISTS oceania;
-CREATE VIEW oceania AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.oceania;
+CREATE VIEW final.oceania AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Oceanía';
 
 -- Antártida
-DROP VIEW IF EXISTS antartida;
-CREATE VIEW antartida AS
-SELECT * FROM vista_companies_continente
+DROP VIEW IF EXISTS final.antartida;
+CREATE VIEW final.antartida AS
+SELECT * FROM final.vista_companies_continente
 WHERE continent ILIKE 'Antártida';
 
 
@@ -84,25 +81,22 @@ WHERE continent ILIKE 'Antártida';
 SELECT
     DISTINCT industry,
     COUNT(industry)
-FROM norteamerica
+FROM final.norteamerica
 GROUP BY industry
 ORDER BY COUNT(industry) DESC
 LIMIT 10;
 
-SELECT * FROM norteamerica
-WHERE industry ILIKE 'IT Services & Consulting' ORDER BY average_rating DESC;
-
 --Empresas mejore valoradas
 SELECT
     id
-FROM norteamerica
+FROM final.norteamerica
 ORDER BY average_rating DESC;
 
 -- Aspectos mas calificados altos en compañias americanas
 SELECT
     COUNT(chr.rating_value),
     chr.rating_value
-FROM norteamerica n
+FROM final.norteamerica n
 JOIN final.companies_highly_rated chr
     ON n.id = chr.id_company
 WHERE n.average_rating >= 4
@@ -112,7 +106,7 @@ GROUP BY chr.rating_value ;
 SELECT
     COUNT(ccr.value),
     ccr.value
-FROM norteamerica n
+FROM final.norteamerica n
 JOIN final.companies_critically_rated ccr
     ON n.id = ccr.id_company
 WHERE n.average_rating >= 4
@@ -122,7 +116,7 @@ GROUP BY ccr.value;
 --correlacion entre el salario y el rating
 SELECT
     CORR(average_salary, average_rating) AS correlacion
-FROM norteamerica;
+FROM final.norteamerica;
 
 --correlacion entre la edad de la empresa y el rating
 SELECT
@@ -130,28 +124,28 @@ SELECT
         CAST(REGEXP_REPLACE(age, '[^0-9]', '', 'g') AS INTEGER),
         average_rating
     ) AS correlacion_edad_rating
-FROM norteamerica
+FROM final.norteamerica
 WHERE age ~ '^[0-9]+ years? old$';
 
 --correlacion entre el salario y las reviews
 SELECT
     CORR(average_salary, total_reviews) AS correlacion
-FROM norteamerica;
+FROM final.norteamerica;
 
 --correlacion average_Rating y total_reviews
 SELECT
     CORR(average_rating, total_reviews) AS correlacion
-FROM norteamerica;
+FROM final.norteamerica;
 
 --correlacion entre el rating y los total benefits
 SELECT
     CORR(average_rating, total_benefits) AS correlacion
-FROM norteamerica;
+FROM final.norteamerica;
 
 --correlacion entre el salario y los beneficios totales
 SELECT
     CORR(average_salary, total_benefits) AS correlacion
-FROM norteamerica;
+FROM final.norteamerica;
 
 
 
@@ -161,33 +155,33 @@ FROM norteamerica;
 SELECT
     DISTINCT industry,
     COUNT(industry)
-FROM asia
+FROM final.asia
 GROUP BY industry
 ORDER BY COUNT(industry) DESC;
 
 -- Empresas mejor valoradas en Asia dentro de IT Services & Consulting
 SELECT *
-FROM asia
+FROM final.asia
 WHERE industry ILIKE 'IT Services & Consulting'
 ORDER BY average_rating DESC;
 
 -- Empresas mejor valoradas en general en Asia
 SELECT *
-FROM asia
+FROM final.asia
 ORDER BY average_rating DESC;
 
 --distribucion del rating en asia
 SELECT
     average_rating,
     COUNT(average_rating)
-FROM asia
+FROM final.asia
 GROUP BY average_rating ORDER BY average_rating DESC;
 
 -- Aspectos mas calificados altos en compañias americanas
 SELECT
     COUNT(chr.rating_value),
     chr.rating_value
-FROM asia a
+FROM final.asia a
 JOIN final.companies_highly_rated chr
     ON a.id = chr.id_company
 WHERE a.average_rating >= 4
@@ -197,7 +191,7 @@ GROUP BY chr.rating_value ;
 SELECT
     COUNT(ccr.value),
     ccr.value
-FROM asia a
+FROM final.asia a
 JOIN final.companies_critically_rated ccr
     ON a.id = ccr.id_company
 WHERE a.average_rating >= 4
@@ -206,7 +200,7 @@ GROUP BY ccr.value;
 -- Correlación entre salario y rating en Asia
 SELECT
     CORR(average_salary, average_rating) AS correlacion
-FROM asia;
+FROM final.asia;
 
 -- Correlación entre la edad de la empresa y el rating en Asia
 SELECT
@@ -214,25 +208,25 @@ SELECT
         CAST(REGEXP_REPLACE(age, '[^0-9]', '', 'g') AS INTEGER),
         average_rating
     ) AS correlacion_edad_rating
-FROM asia
+FROM final.asia
 WHERE age ~ '^[0-9]+ years? old$';
 
 -- Correlación entre salario y total de reviews en Asia
 SELECT
     CORR(average_salary, total_reviews) AS correlacion
-FROM asia;
+FROM final.asia;
 
 -- Correlación entre rating y total de reviews en Asia
 SELECT
     CORR(average_rating, total_reviews) AS correlacion
-FROM asia;
+FROM final.asia;
 
 -- Correlación entre rating y beneficios totales en Asia
 SELECT
     CORR(average_rating, total_benefits) AS correlacion
-FROM asia;
+FROM final.asia;
 
 -- Correlación entre salario y beneficios totales en Asia
 SELECT
     CORR(average_salary, total_benefits) AS correlacion
-FROM asia;
+FROM final.asia;
