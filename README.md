@@ -1022,7 +1022,7 @@ Enriqueciendo los datos con coordenadas:
 
 Script `04_analysis.sql`
 
-Con el objetivo de ver mas concentrado las empresas, ordenadas por continente, agregamos a la base la vista de ciudades_continente. Asi podemos ver las mismas consultas anteriores pero a nivel mas local.
+Con el objetivo de ver mas concentrado las empresas, ordenadas por continente, agregamos a la base la vista de ciudades_continente. Asi podemos ver las mismas consultas anteriores pero a nivel local.
 
 ```sql
 DROP VIEW IF EXISTS final.vista_ciudades_continente CASCADE ;
@@ -1205,5 +1205,27 @@ FROM final.norteamerica;
 | correlacion             |
 |-------------------------|
 | 0.02428601234692547     |
+
+### Correlación entre salario y los beneficios totales
+```sql
+SELECT
+    CORR(average_salary, total_benefits) AS correlacion
+FROM final.norteamerica;
+```
+| correlacion             |
+|-------------------------|
+| 0.9044049127004617      |
+
+### Correlación entre el rating y los beneficios totales
+```sql
+SELECT
+    CORR(average_rating, total_benefits) AS correlacion
+FROM final.norteamerica;
+```
+| correlacion             |
+|-------------------------|
+|0.06125804776864004      |
+
+
 
 
