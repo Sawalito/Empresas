@@ -88,9 +88,11 @@ LIMIT 10;
 
 --Empresas mejore valoradas
 SELECT
-    id
+    company_name,
+    average_rating
 FROM final.norteamerica
-ORDER BY average_rating DESC;
+ORDER BY average_rating DESC
+LIMIT 10;
 
 -- Aspectos mas calificados altos en compañias americanas
 SELECT
