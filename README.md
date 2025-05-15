@@ -1114,6 +1114,18 @@ GROUP BY industry
 ORDER BY COUNT(industry) DESC
 LIMIT 10;
 ```
+| Industry                  | count |
+|---------------------------|-------|
+| IT Services & Consulting  | 281   |
+| Software Product          | 75    |
+| Financial Services        | 39    |
+| Hospitality               | 30    |
+| Pharma                    | 26    |
+| Internet                  | 23    |
+| BPO                       | 22    |
+| Healthcare                | 22    |
+| Recruitment               | 21    |
+| Analytics & KPO           | 20    |
 
 
 
